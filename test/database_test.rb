@@ -50,6 +50,16 @@ class DatabaseTest < Test::Unit::TestCase
         assert_not_nil JSON.parse(@db['abc'])['_rev']
       end
       
+      should "get the document count" do
+        assert_equal 0, @db.document_count
+        @db['a'] = {:a => :b}.to_json
+        assert_equal 1, @db.document_count
+        @db['b'] = {:a => :b}.to_json
+        assert_equal 2, @db.document_count
+        @db['c'] = {:a => :b}.to_json
+        assert_equal 3, @db.document_count
+      end
+      
       context "when updating" do
         should "update the content" do
           state = JSON.parse( @db.store('abc', {:a => :b}.to_json ))

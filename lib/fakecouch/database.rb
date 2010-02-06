@@ -65,6 +65,10 @@ module Fakecouch
       
       self.store(new_id, JSON.generate(original))
     end
+    
+    def document_count
+      storage.keys.size
+    end
 
   protected
   
