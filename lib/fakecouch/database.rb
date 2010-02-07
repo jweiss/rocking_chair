@@ -92,7 +92,6 @@ module Fakecouch
       else
         original.delete('_rev')
       end
-      original.delete('_id')
       
       self.store(new_id, original.to_json)
     end

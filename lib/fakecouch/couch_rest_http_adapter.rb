@@ -51,7 +51,12 @@ module Fakecouch
     end
   
     def copy(uri, headers)
-      raise "COPY: #{uri.inspect}: #{headers.inspect}" 
+      url, parameters = Fakecouch::Server.normalize_url(uri)
+      if url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
+        Fakecouch::Server.copy($1, $2, headers.merge(parameters))
+      else
+        raise "COPY: #{uri.inspect}: #{headers.inspect}"
+      end
     end
     
   end

@@ -123,6 +123,13 @@ class DatabaseTest < Test::Unit::TestCase
         end
       end
       
+      should "raise 409 if no rev given but destination exists" do
+        @db.store('destination',{:c => :e}.to_json)
+        assert_error_code 409 do
+          @db.copy('abc', 'destination')
+        end
+      end
+      
       should "raise 409 if the rev does not match" do
         @state = JSON.parse(@db.store('def',{'1' => '2'}.to_json))
         

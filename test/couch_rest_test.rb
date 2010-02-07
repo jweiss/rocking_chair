@@ -177,6 +177,66 @@ class CouchRestTest < Test::Unit::TestCase
         end
       end
       
+      context "when copying a document (COPY)" do
+        setup do
+          Fakecouch::Database.any_instance.stubs(:rev).returns('123')
+          @db.save_doc({'a' => 'b', '_id' => 'original'})
+        end
+        
+        context "when using an destination ID" do
+        
+          should "copy" do
+            @db.copy_doc({'a' => 'b', '_id' => 'original', '_rev' => '123'}, 'the_new_id')
+            assert_equal({'a' => 'b', '_id' => 'the_new_id', '_rev' => '123'}, @db.get('the_new_id'))
+          end
+        
+          should "copy with overwrite with revision" do
+            seq = sequence('revision')
+            Fakecouch::Database.any_instance.expects(:rev).returns('first-rev').in_sequence(seq)
+            Fakecouch::Database.any_instance.expects(:rev).returns('second-rev').in_sequence(seq)
+          
+            @db.save_doc({'1' => '2', '_id' => 'destination'})
+          
+            @db.copy_doc({'a' => 'b', '_id' => 'original', '_rev' => '123'}, "destination?rev=first-rev")
+            assert_equal({'a' => 'b', '_id' => 'destination', '_rev' => 'second-rev'}, @db.get('destination'))
+          end
+        
+          should "not copy with overwrite if the revision does not match" do
+            @db.save_doc({'1' => '2', '_id' => 'destination'})
+            assert_raise(HttpAbstraction::Conflict) do
+              @db.copy_doc({'a' => 'b', '_id' => 'original', '_rev' => '123'}, 'destination?rev=not-here')
+            end
+          end
+        
+        end
+        
+        context "when using a destination object" do
+          should "copy" do
+            destination = {"_id" => 'destination', 'c' => 'a', '_rev' => '123'}
+            @db.copy_doc({'a' => 'b', '_id' => 'original', '_rev' => '123'}, destination)
+            assert_equal({'a' => 'b', '_id' => 'destination', '_rev' => '123'}, @db.get('destination'))
+          end
+          
+          should "copy with overwrite with revision" do
+            seq = sequence('revision')
+            Fakecouch::Database.any_instance.expects(:rev).returns('first-rev').in_sequence(seq)
+            Fakecouch::Database.any_instance.expects(:rev).returns('second-rev').in_sequence(seq)
+          
+            @db.save_doc({'1' => '2', '_id' => 'destination'})
+          
+            @db.copy_doc({'a' => 'b', '_id' => 'original', '_rev' => '123'}, {'1' => '2', '_id' => 'destination', '_rev' => 'first-rev'})
+            assert_equal({'a' => 'b', '_id' => 'destination', '_rev' => 'second-rev'}, @db.get('destination'))
+          end
+          
+          should "not copy with overwrite if the revision does not match" do
+            @db.save_doc({'1' => '2', '_id' => 'destination'})
+            assert_raise(HttpAbstraction::Conflict) do
+              @db.copy_doc({'a' => 'b', '_id' => 'original', '_rev' => '123'}, {'1' => '2', '_id' => 'destination', '_rev' => 'missing'})
+            end
+          end
+        end
+      end
+      
     end
      
   end
