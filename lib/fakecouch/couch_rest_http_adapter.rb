@@ -41,10 +41,12 @@ module Fakecouch
   
     def delete(uri, headers={})
       url, parameters = Fakecouch::Server.normalize_url(uri)
-      if url.match(/\A[a-zA-Z0-9\-\_\%]+\Z/)
+      if url.match(/\A(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.delete_db(url)
+      elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
+        Fakecouch::Server.delete($1, $2, parameters)
       else
-        raise "DELETE: #{uri.inspect}: #{headers.inspect}" 
+        raise "DELETE: #{uri.inspect}: #{headers.inspect}"
       end
     end
   

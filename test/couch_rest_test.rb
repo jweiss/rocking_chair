@@ -155,6 +155,28 @@ class CouchRestTest < Test::Unit::TestCase
         end
       end
       
+      context "when deleting a document (POST)" do
+        should "delete if the rev matches" do
+          Fakecouch::Database.any_instance.stubs(:rev).returns('123')
+          
+          @db.save_doc({'a' => 'b', '_id' => 'delete_me'})
+          @db.delete_doc({'a' => 'b', '_id' => 'delete_me', '_rev' => '123'})
+          assert_raise(RestClient::ResourceNotFound) do
+            @db.get('delete_me')
+          end
+        end
+        
+        should "fail with conflich if the rev does not matche" do
+          @db.save_doc({'a' => 'b', '_id' => 'delete_me'})
+          assert_raise(HttpAbstraction::Conflict) do
+            @db.delete_doc({'a' => 'b', '_id' => 'delete_me', '_rev' => 'wrong-revision'})
+          end
+          assert_nothing_raised do
+            @db.get('delete_me')
+          end
+        end
+      end
+      
     end
      
   end

@@ -9,11 +9,18 @@ module Fakecouch
     def self.reset
       @databases = {}
     end
+    
+    def self.normalize_options(options)
+      (options || {}).each do |k,v|
+        options[k] = options[k].first if options[k].is_a?(Array)
+      end
+      options
+    end
         
     def self.normalize_url(url)
       url = url.to_s.gsub(BASE_URL, '') #.gsub('%2F', '/')
       if url.match(/\A(.*)\?(.*)?\Z/)
-        return [$1, CGI::parse($2 || '')]
+        return [$1, normalize_options(CGI::parse($2 || ''))]
       else
         return [url, {}]
       end
@@ -49,6 +56,18 @@ module Fakecouch
     def self.store(db_name, doc_id, document, options)
       respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].store(doc_id, document, options)
+    rescue Fakecouch::Error => e
+      e.raise_rest_client_error
+    end
+    
+    def self.delete(db_name, doc_id, options = {})
+      options = {
+        'rev' => nil
+      }.update(options)
+      options['rev'] = options['rev'].first if options['rev'].is_a?(Array)
+      
+      respond_with_error(404) unless databases.has_key?(db_name)
+      databases[db_name].delete(doc_id, options['rev'])
     rescue Fakecouch::Error => e
       e.raise_rest_client_error
     end

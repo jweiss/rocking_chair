@@ -33,7 +33,7 @@ module Fakecouch
       options = {
         'rev' => nil,
         'revs' => false
-      }.update(normalize(options))
+      }.update(options)
       options.assert_valid_keys('rev', 'revs', 'revs_info')
       
       document = self[doc_id]
@@ -72,17 +72,13 @@ module Fakecouch
     
     alias_method :store, :[]=
     
-    def delete(doc_id, rev=nil)
+    def delete(doc_id, rev)
       if exists?(doc_id)
-        if rev
-          existing = self[doc_id]
-          if matching_revision?(existing, rev)
-            storage.delete(doc_id)
-          else
-            raise_409
-          end
-        else
+        existing = self[doc_id]
+        if matching_revision?(existing, rev)
           storage.delete(doc_id)
+        else
+          raise_409
         end
       else
         raise_404(doc_id)
@@ -145,12 +141,6 @@ module Fakecouch
     
     def matching_revision?(existing_record, rev)
       JSON.parse(existing_record)['_rev'] == rev
-    end
-    
-    def normalize(options)
-      (options || {}).each do |k,v|
-        options[k] = options[k].first if options[k].is_a?(Array)
-      end
     end
     
   end

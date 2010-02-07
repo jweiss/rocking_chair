@@ -92,13 +92,6 @@ class DatabaseTest < Test::Unit::TestCase
         @state = JSON.parse(@db.store('abc',{:a => :b}.to_json))
       end
       
-      should "delete" do
-        @db.delete('abc')
-        assert_error_code 404 do
-          @db['abc']
-        end
-      end
-      
       should "delete only if the revision matches" do
         assert_error_code 409 do
           @db.delete('abc', 'revrev')
