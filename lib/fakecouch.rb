@@ -1,10 +1,11 @@
 require "rubygems"
+require "active_support"
 require "uuidtools"
-require 'json'
-
+require "cgi"
 require "couchrest"
+
 
 require "fakecouch/error"
 require "fakecouch/database"
-require "fakecouch/http_server"
+require "fakecouch/server"
 require "fakecouch/couch_rest_http_adapter"

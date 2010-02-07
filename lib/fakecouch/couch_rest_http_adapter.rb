@@ -1,14 +1,17 @@
 module Fakecouch
   module CouchRestHttpAdapter
+    URL_PARAMETER = /[a-zA-Z0-9\-\_\%]+/
     
     def get(uri, headers={})
-      url = Fakecouch::HttpServer.normalize_url(uri)
+      url, parameters = Fakecouch::Server.normalize_url(uri)
       if url == ''
-        Fakecouch::HttpServer.info
+        Fakecouch::Server.info
       elsif url == '_all_dbs'
-        Fakecouch::HttpServer.all_dbs
-      elsif url.match(/\A[a-zA-Z0-9\-\_\%]+\Z/)
-        Fakecouch::HttpServer.database(url)
+        Fakecouch::Server.all_dbs(parameters)
+      elsif url.match(/\A(#{URL_PARAMETER})\Z/)
+        Fakecouch::Server.database($1, parameters)
+      elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
+        Fakecouch::Server.load($1, $2, parameters)
       else
         raise "GET: Unknown url: #{url.inspect}  headers: #{headers.inspect}"
       end
@@ -19,18 +22,20 @@ module Fakecouch
     end
   
     def put(uri, payload, headers={})
-      url = Fakecouch::HttpServer.normalize_url(uri)
+      url, parameters = Fakecouch::Server.normalize_url(uri)
       if url.match(/\A[a-zA-Z0-9\-\_\%]+\Z/)
-        Fakecouch::HttpServer.create_db(url)
+        Fakecouch::Server.create_db(url)
+      elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
+        Fakecouch::Server.store($1, $2, payload)
       else
         raise "PUT: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" 
       end
     end
   
     def delete(uri, headers={})
-      url = Fakecouch::HttpServer.normalize_url(uri)
+      url, parameters = Fakecouch::Server.normalize_url(uri)
       if url.match(/\A[a-zA-Z0-9\-\_\%]+\Z/)
-        Fakecouch::HttpServer.delete_db(url)
+        Fakecouch::Server.delete_db(url)
       else
         raise "DELETE: #{uri.inspect}: #{headers.inspect}" 
       end

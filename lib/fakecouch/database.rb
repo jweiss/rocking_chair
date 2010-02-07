@@ -16,15 +16,40 @@ module Fakecouch
       if exists?(doc_id)
         return storage[doc_id]
       else
-        raise_404(doc_id)
+        raise_404
       end
+    end
+    
+    def load(doc_id, options = {})
+      options = {
+        'rev' => nil,
+        'revs' => false
+      }.update(normalize(options))
+      options.assert_valid_keys('rev', 'revs', 'revs_info')
+      
+      document = self[doc_id]
+      if options['rev'] && ( ActiveSupport::JSON.decode(document)['_rev'] != options['rev']) 
+        raise_404
+      end
+      if options['revs'] && options['revs'] == 'true'
+        json =  ActiveSupport::JSON.decode(document)
+        json['_revisions'] = {'start' => 1, 'ids' => [json['_rev']]}
+        document = json.to_json
+      end
+      if options['revs_info'] && options['revs_info'] == 'true'
+        json =  ActiveSupport::JSON.decode(document)
+        json['_revs_info'] = [{"rev" => json['_rev'], "status" => "disk"}]
+        document = json.to_json
+      end
+      document
     end
     
     def []=(doc_id, document)
       json = nil
       begin
-        json = JSON.parse(document)
-      rescue JSON::ParserError => e
+        json = ActiveSupport::JSON.decode(document)
+        raise "is not a Hash" unless json.is_a?(Hash)
+      rescue Exception => e
         raise Fakecouch::Error.new(500, 'InvalidJSON', "the document is not a valid JSON object: #{e}")
       end
       
@@ -63,7 +88,7 @@ module Fakecouch
       end
       original.delete('_id')
       
-      self.store(new_id, JSON.generate(original))
+      self.store(new_id, original.to_json)
     end
     
     def document_count
@@ -76,8 +101,8 @@ module Fakecouch
       storage.has_key?(doc_id)
     end
   
-    def raise_404(doc_id)
-      raise Fakecouch::Error.new(404, 'DocumentNotFound', "could not find a document by ID #{doc_id.inspect}")
+    def raise_404
+      raise Fakecouch::Error.new(404, 'not_found', "missing")
     end
     
     def raise_409
@@ -103,13 +128,19 @@ module Fakecouch
       json[:_rev] = rev
       json[:_id] = doc_id || uuid
       
-      storage[doc_id] = JSON.generate(json)
+      storage[doc_id] = json.to_json
       
       state_tuple(json[:_id], json[:_rev])
     end
     
     def matching_revision?(existing_record, rev)
       JSON.parse(existing_record)['_rev'] == rev
+    end
+    
+    def normalize(options)
+      (options || {}).each do |k,v|
+        options[k] = options[k].first if options[k].is_a?(Array)
+      end
     end
     
   end

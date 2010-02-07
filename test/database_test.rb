@@ -142,10 +142,30 @@ class DatabaseTest < Test::Unit::TestCase
         assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a'}, JSON.parse(@db['a']))
       end
       
+      should "return a matching document by revision" do
+        @db.stubs(:rev).returns('rev')
+        @db['a'] = {:a => :b}.to_json
+        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a'}, JSON.parse(@db.load('a', 'rev' => 'rev')))
+      end
+      
       should "raise a 404 if there is no matching document" do
         assert_error_code(404) do
           @db['no-such-key']
         end
+      end
+      
+      should "raise a 404 if the revision does not match" do
+        @db.stubs(:rev).returns('rev')
+        @db['a'] = {:a => :b}.to_json
+        assert_error_code(404) do
+          @db.load('a', 'rev' => 'no-such-rev')
+        end
+      end
+      
+      should "load the revision history" do
+        @db.stubs(:rev).returns('rev')
+        @db['a'] = {:a => :b}.to_json
+        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a', '_revisions' => {'start' => 1, 'ids' => ['rev']}}, JSON.parse(@db.load('a', 'revs' => 'true')))
       end
     end
     
