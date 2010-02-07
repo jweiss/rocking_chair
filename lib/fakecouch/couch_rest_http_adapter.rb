@@ -12,6 +12,8 @@ module Fakecouch
         Fakecouch::Server.uuids(parameters)
       elsif url.match(/\A(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.database($1, parameters)
+      elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/) && $2 == '_all_docs'
+        Fakecouch::Server.load_all($1, parameters)
       elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.load($1, $2, parameters)
       else

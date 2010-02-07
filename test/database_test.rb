@@ -179,5 +179,54 @@ class DatabaseTest < Test::Unit::TestCase
       end
     end
     
+    context "when loading all documents" do
+      should "return all docs" do
+        @db.stubs(:rev).returns('rev')
+        5.times do |i|
+          @db["item-#{i}"] = {"data" => "item-#{i}"}.to_json
+        end
+        assert_equal({
+          "total_rows" => 5, "offset" => 0, "rows" => [
+            {"id" => "item-0", "key" => "item-0", "value" => {"rev" => "rev"}},
+            {"id" => "item-1", "key" => "item-1", "value" => {"rev" => "rev"}},
+            {"id" => "item-2", "key" => "item-2", "value" => {"rev" => "rev"}},
+            {"id" => "item-3", "key" => "item-3", "value" => {"rev" => "rev"}},
+            {"id" => "item-4", "key" => "item-4", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents)
+      end
+      
+      should "sort all docs by ID ascending" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 3, "offset" => 0, "rows" => [
+            {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}},
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
+            {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents)
+      end
+      
+      should "sort all docs by ID descending" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 3, "offset" => 0, "rows" => [
+            {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}},
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
+            {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents('descending' => true))
+      end
+      
+    end
+    
   end
 end

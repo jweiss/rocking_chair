@@ -79,6 +79,13 @@ module Fakecouch
       e.raise_rest_client_error
     end
     
+    def self.load_all(db_name, options = {})
+      respond_with_error(404) unless databases.has_key?(db_name)
+      databases[db_name].all_documents(options)
+    rescue Fakecouch::Error => e
+      e.raise_rest_client_error
+    end
+    
     def self.copy(db_name, doc_id, options = {})
       respond_with_error(404) unless databases.has_key?(db_name)
       destination_id, revision = normalize_url(options['Destination'])

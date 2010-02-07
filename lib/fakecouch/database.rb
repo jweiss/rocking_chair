@@ -99,6 +99,21 @@ module Fakecouch
     def document_count
       storage.keys.size
     end
+    
+    def all_documents(options = {})
+      options = {
+        'descending' => false
+      }.update(options)
+      options.assert_valid_keys('descending')
+      
+      sorted_keys = (options['descending'].to_s == 'true') ? storage.keys.sort{|x,y| y <=> x } : storage.keys.sort{|x,y| x <=> y }
+      rows = sorted_keys.map do |key|
+        document = JSON.parse(storage[key])
+        {'id' => document['_id'], 'key' => document['_id'], 'value' => {'rev' => document['_rev']}}
+      end
+      
+      { "total_rows" => document_count, "offset" => 0, "rows" => rows}.to_json
+    end
 
   protected
   

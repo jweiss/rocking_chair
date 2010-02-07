@@ -51,22 +51,65 @@ class CouchRestTest < Test::Unit::TestCase
       end
     end
     
-    # context "Bulk Document API" do
-    #   setup do
-    #     @db = @couch.create_db('fakecouch')
-    #     Fakecouch::Database.any_instance.stubs(:rev).returns('the-revision')
-    #   end
-    #   
-    #   should "accept bulk inserts/updates" do
-    #     @db.bulk_save_cache_limit = 5
-    #     assert_nothing_raised do
-    #       10.times do |i|
-    #         @db.save_doc({'_id' => "new-item-#{i}", 'content' => 'here'}, true)
-    #       end
-    #     end
-    #     assert_equal 10, @db.info['doc_count']
-    #   end
-    # end
+    context "Bulk Document API" do
+      setup do
+        @db = @couch.create_db('fakecouch')
+        Fakecouch::Database.any_instance.stubs(:rev).returns('the-revision')
+      end
+      
+      context "loading all documents" do
+        should "load the total documents" do
+          5.times do |i|
+            @db.save_doc({'_id' => "item-#{i}", 'a' => 'b'})
+          end
+          assert_equal({
+            "total_rows" => 5, "offset" => 0, "rows" => [
+              {"id" => "item-0", "key" => "item-0", "value" => {"rev" => "the-revision"}},
+              {"id" => "item-1", "key" => "item-1", "value" => {"rev" => "the-revision"}},
+              {"id" => "item-2", "key" => "item-2", "value" => {"rev" => "the-revision"}},
+              {"id" => "item-3", "key" => "item-3", "value" => {"rev" => "the-revision"}},
+              {"id" => "item-4", "key" => "item-4", "value" => {"rev" => "the-revision"}}
+            ]
+          }, @db.documents)
+        end
+        
+        should "sort the result by ID ascending" do
+          @db.save_doc({'_id' => "C", 'a' => 'b'})
+          @db.save_doc({'_id' => "B", 'a' => 'b'})
+          @db.save_doc({'_id' => "A", 'a' => 'b'})
+          assert_equal({
+            "total_rows" => 3, "offset" => 0, "rows" => [
+              {"id" => "A", "key" => "A", "value" => {"rev" => "the-revision"}},
+              {"id" => "B", "key" => "B", "value" => {"rev" => "the-revision"}},
+              {"id" => "C", "key" => "C", "value" => {"rev" => "the-revision"}}
+            ]
+          }, @db.documents)
+        end
+        
+        should "sort the result by ID descending" do
+          @db.save_doc({'_id' => "C", 'a' => 'b'})
+          @db.save_doc({'_id' => "B", 'a' => 'b'})
+          @db.save_doc({'_id' => "A", 'a' => 'b'})
+          assert_equal({
+            "total_rows" => 3, "offset" => 0, "rows" => [
+              {"id" => "C", "key" => "C", "value" => {"rev" => "the-revision"}},
+              {"id" => "B", "key" => "B", "value" => {"rev" => "the-revision"}},
+              {"id" => "A", "key" => "A", "value" => {"rev" => "the-revision"}}
+            ]
+          }, @db.documents('descending' => true))
+        end
+      end
+      
+      # should "accept bulk inserts/updates" do
+      #   @db.bulk_save_cache_limit = 5
+      #   assert_nothing_raised do
+      #     10.times do |i|
+      #       @db.save_doc({'_id' => "new-item-#{i}", 'content' => 'here'}, true)
+      #     end
+      #   end
+      #   assert_equal 10, @db.info['doc_count']
+      # end
+    end
     
     context "Document API" do
       setup do
