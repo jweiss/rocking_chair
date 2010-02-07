@@ -7,10 +7,19 @@ module Fakecouch
       @storage = {}
     end
     
-    def uuid
+    def self.uuid
       UUIDTools::UUID.random_create().to_s
     end
-    alias rev uuid
+    
+    def self.uuids(count)
+      ids = []
+      count.to_i.times {ids << uuid}
+      ids
+    end
+    
+    def rev
+      self.class.uuid
+    end
     
     def [](doc_id)
       if exists?(doc_id)
@@ -44,7 +53,8 @@ module Fakecouch
       document
     end
     
-    def []=(doc_id, document)
+    def []=(doc_id, document, options ={})
+      # options are ignored for now: batch, bulk
       json = nil
       begin
         json = ActiveSupport::JSON.decode(document)
@@ -126,7 +136,7 @@ module Fakecouch
       json.delete('_rev')
       json.delete('_id')
       json[:_rev] = rev
-      json[:_id] = doc_id || uuid
+      json[:_id] = doc_id || self.class.uuid
       
       storage[doc_id] = json.to_json
       

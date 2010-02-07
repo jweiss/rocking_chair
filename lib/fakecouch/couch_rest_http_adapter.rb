@@ -8,6 +8,8 @@ module Fakecouch
         Fakecouch::Server.info
       elsif url == '_all_dbs'
         Fakecouch::Server.all_dbs(parameters)
+      elsif url == '_uuids'
+        Fakecouch::Server.uuids(parameters)
       elsif url.match(/\A(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.database($1, parameters)
       elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
@@ -18,15 +20,20 @@ module Fakecouch
     end
   
     def post(uri, payload, headers={})
-      raise "POST: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" 
+      url, parameters = Fakecouch::Server.normalize_url(uri)
+      if url.match(/\A(#{URL_PARAMETER})\/?\Z/)
+        Fakecouch::Server.store($1, nil, payload, parameters)
+      else
+        raise "POST: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" 
+      end
     end
   
     def put(uri, payload, headers={})
       url, parameters = Fakecouch::Server.normalize_url(uri)
-      if url.match(/\A[a-zA-Z0-9\-\_\%]+\Z/)
+      if url.match(/\A(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.create_db(url)
       elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
-        Fakecouch::Server.store($1, $2, payload)
+        Fakecouch::Server.store($1, $2, payload, parameters)
       else
         raise "PUT: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" 
       end

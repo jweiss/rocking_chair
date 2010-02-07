@@ -8,12 +8,16 @@ class DatabaseTest < Test::Unit::TestCase
     
     context "when asking for a UUID" do
       should "return a uuid" do
-        assert_not_nil @db.uuid
+        assert_not_nil Fakecouch::Database.uuid
       end
       
       should "always return a fresh one" do
-        first_id = @db.uuid
-        assert_not_equal first_id, @db.uuid
+        first_id = Fakecouch::Database.uuid
+        assert_not_equal first_id, Fakecouch::Database.uuid
+      end
+      
+      should "return a list of UUIDs" do
+        assert_equal 3, Fakecouch::Database.uuids(3).uniq.size
       end
     end
     
@@ -22,6 +26,12 @@ class DatabaseTest < Test::Unit::TestCase
         @db.stubs(:rev).returns('rev')
         @db['abc'] = {:a => :b}.to_json
         assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'abc'}, JSON.parse(@db['abc']))
+      end
+      
+      should "assing an ID is none given" do
+        @db.stubs(:rev).returns('rev')
+        Fakecouch::Database.expects(:uuid).returns('uuid')
+        assert_equal( {"rev" => "rev", "id" => "uuid", "ok" => true}, JSON.parse(@db.store(nil, {'a' => 'b'}.to_json)))
       end
       
       should "make sure the content is valid JSON" do

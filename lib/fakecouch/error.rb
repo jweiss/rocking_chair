@@ -22,7 +22,7 @@ module Fakecouch
       when 404
         raise RestClient::ResourceNotFound
       when 409
-        raise RestClient::ResourceNotFound
+        raise HttpAbstraction::Conflict
       else
         raise "Unknown error code: #{code.inspect}"
       end

@@ -27,6 +27,15 @@ module Fakecouch
       respond_with(databases.keys)
     end
     
+    def self.uuids(options = {})
+      options = {
+        'count' => 100
+      }.update(options)
+      options['count'] = options['count'].first if options['count'].is_a?(Array)
+
+      respond_with({"uuids" => Fakecouch::Database.uuids(options['count']) })
+    end
+    
     def self.create_db(name)
       databases[name] = Fakecouch::Database.new
       respond_with({"ok" => true})
@@ -37,9 +46,11 @@ module Fakecouch
       respond_with({"ok" => true})
     end
     
-    def self.store(db_name, doc_id, document)
+    def self.store(db_name, doc_id, document, options)
       respond_with_error(404) unless databases.has_key?(db_name)
-      databases[db_name].store(doc_id, document)
+      databases[db_name].store(doc_id, document, options)
+    rescue Fakecouch::Error => e
+      e.raise_rest_client_error
     end
     
     def self.load(db_name, doc_id, options = {})
