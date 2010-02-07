@@ -155,7 +155,7 @@ class CouchRestTest < Test::Unit::TestCase
         end
       end
       
-      context "when deleting a document (POST)" do
+      context "when deleting a document (DELETE)" do
         should "delete if the rev matches" do
           Fakecouch::Database.any_instance.stubs(:rev).returns('123')
           
