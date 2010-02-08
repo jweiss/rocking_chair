@@ -2,7 +2,10 @@ module Fakecouch
   module CouchRestHttpAdapter
     URL_PARAMETER = /[a-zA-Z0-9\-\_\%]+/
     
+    @_fakecouch_debug = false
+    
     def get(uri, headers={})
+      puts "GET: #{uri.inspect}: #{headers.inspect}" if @_fakecouch_debug
       url, parameters = Fakecouch::Server.normalize_url(uri)
       if url == ''
         Fakecouch::Server.info
@@ -22,6 +25,7 @@ module Fakecouch
     end
   
     def post(uri, payload, headers={})
+      puts "POST: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_fakecouch_debug
       url, parameters = Fakecouch::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\/?\Z/)
         Fakecouch::Server.store($1, nil, payload, parameters)
@@ -33,6 +37,7 @@ module Fakecouch
     end
   
     def put(uri, payload, headers={})
+      puts "PUT: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_fakecouch_debug
       url, parameters = Fakecouch::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.create_db(url)
@@ -44,6 +49,7 @@ module Fakecouch
     end
   
     def delete(uri, headers={})
+      puts "DELETE: #{uri.inspect}: #{headers.inspect}" if @_fakecouch_debug
       url, parameters = Fakecouch::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.delete_db(url)
@@ -55,6 +61,7 @@ module Fakecouch
     end
   
     def copy(uri, headers)
+      puts "COPY: #{uri.inspect}: #{headers.inspect}" if @_fakecouch_debug
       url, parameters = Fakecouch::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.copy($1, $2, headers.merge(parameters))

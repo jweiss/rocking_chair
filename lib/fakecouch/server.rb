@@ -54,7 +54,7 @@ module Fakecouch
     end
     
     def self.store(db_name, doc_id, document, options)
-      respond_with_error(404) unless databases.has_key?(db_name)
+      return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].store(doc_id, document, options)
     rescue Fakecouch::Error => e
       e.raise_rest_client_error
@@ -66,28 +66,28 @@ module Fakecouch
       }.update(options)
       options['rev'] = options['rev'].first if options['rev'].is_a?(Array)
       
-      respond_with_error(404) unless databases.has_key?(db_name)
+      return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].delete(doc_id, options['rev'])
     rescue Fakecouch::Error => e
       e.raise_rest_client_error
     end
     
     def self.load(db_name, doc_id, options = {})
-      respond_with_error(404) unless databases.has_key?(db_name)
+      return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].load(doc_id, options)
     rescue Fakecouch::Error => e
       e.raise_rest_client_error
     end
     
     def self.load_all(db_name, options = {})
-      respond_with_error(404) unless databases.has_key?(db_name)
+      return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].all_documents(options)
     rescue Fakecouch::Error => e
       e.raise_rest_client_error
     end
     
     def self.copy(db_name, doc_id, options = {})
-      respond_with_error(404) unless databases.has_key?(db_name)
+      return respond_with_error(404) unless databases.has_key?(db_name)
       destination_id, revision = normalize_url(options['Destination'])
       databases[db_name].copy(doc_id, destination_id, revision['rev'])
     rescue Fakecouch::Error => e
@@ -95,7 +95,7 @@ module Fakecouch
     end
     
     def self.bulk(db_name, options = {})
-      respond_with_error(404) unless databases.has_key?(db_name)
+      return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].bulk(options)
     rescue Fakecouch::Error => e
       e.raise_rest_client_error
@@ -114,7 +114,7 @@ module Fakecouch
           "instance_start_time" => "1265409273572320",
           "disk_format_version" => 4})
       else
-        respond_with_error(404)
+        return respond_with_error(404)
       end
     end
     
@@ -122,7 +122,8 @@ module Fakecouch
       obj.to_json
     end
     
-    def self.respond_with_error(code, message)
+    def self.respond_with_error(code, message=nil)
+      message ||= 'no such DB'
       {code => message}.to_json
     end
   end

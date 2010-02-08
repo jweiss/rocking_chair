@@ -4,6 +4,8 @@ require 'test/unit'
 require 'shoulda'
 require 'mocha'
 
+require File.dirname(__FILE__) + "/fixtures/extended_couch_rest_fixtures"
+
 def assert_error_code(code, &blk)
   ex = nil
   begin
