@@ -96,6 +96,25 @@ module Fakecouch
       self.store(new_id, original.to_json)
     end
     
+    def bulk(documents)
+      documents = JSON.parse(documents)
+      response = []
+      documents['docs'].each do |doc|
+        begin
+          if exists?(doc['_id']) && doc['_deleted'].to_s == 'true'
+            self.delete(doc['_id'], doc['_rev'])
+            state = {'id' => doc['_id'], 'rev' => doc['_rev']}
+          else
+            state = JSON.parse(self.store(doc['_id'], doc.to_json))
+          end
+          response << {'id' => state['id'], 'rev' => state['rev']}
+        rescue Fakecouch::Error => e
+           response << {'id' => doc['_id'], 'error' => e.error, 'reason' => e.reason}
+        end
+      end
+      response.to_json
+    end
+    
     def document_count
       storage.keys.size
     end

@@ -1,7 +1,7 @@
 module Fakecouch
   class Error < StandardError
     
-    attr_reader :code
+    attr_reader :code, :error, :reason
     
     def initialize(code, error, reason)
       @code = code

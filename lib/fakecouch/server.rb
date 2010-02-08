@@ -94,6 +94,13 @@ module Fakecouch
       e.raise_rest_client_error
     end
     
+    def self.bulk(db_name, options = {})
+      respond_with_error(404) unless databases.has_key?(db_name)
+      databases[db_name].bulk(options)
+    rescue Fakecouch::Error => e
+      e.raise_rest_client_error
+    end
+    
     def self.database(name, parameters)
       if databases.has_key?(name)
         respond_with({

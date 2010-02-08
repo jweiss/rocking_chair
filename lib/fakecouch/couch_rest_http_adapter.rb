@@ -25,6 +25,8 @@ module Fakecouch
       url, parameters = Fakecouch::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\/?\Z/)
         Fakecouch::Server.store($1, nil, payload, parameters)
+      elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/) && $2 == '_bulk_docs'
+        Fakecouch::Server.bulk($1, payload)
       else
         raise "POST: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" 
       end

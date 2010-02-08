@@ -127,15 +127,52 @@ class CouchRestTest < Test::Unit::TestCase
         end
       end
       
-      # should "accept bulk inserts/updates" do
-      #   @db.bulk_save_cache_limit = 5
-      #   assert_nothing_raised do
-      #     10.times do |i|
-      #       @db.save_doc({'_id' => "new-item-#{i}", 'content' => 'here'}, true)
-      #     end
-      #   end
-      #   assert_equal 10, @db.info['doc_count']
-      # end
+      context "bulk modifications" do
+        
+        should "accept bulk inserts/updates" do
+          Fakecouch::Database.stubs(:uuid).returns('foo-id')
+          
+          docs = [{"_id" => 'a', "value" => 1}, {"_id" => 'b', 'value' => 2}, {'value' => 3}]
+          assert_equal([
+            {'id' => 'a', "rev" => 'the-revision'},
+            {'id' => 'b', "rev" => 'the-revision'},
+            {'id' => 'foo-id', "rev" => 'the-revision'}
+          ], @db.bulk_save(docs))
+        end
+        
+        should "handle automatic inserts/updates" do
+          @db.bulk_save_cache_limit = 5
+          assert_nothing_raised do
+            10.times do |i|
+              @db.save_doc({'_id' => "new-item-#{i}", 'content' => 'here'}, true)
+            end
+          end
+          assert_equal 10, @db.info['doc_count']
+        end
+        
+        should "do updates" do
+          @db.save_doc({'_id' => "A", 'a' => 'b'})
+          @db.save_doc({'_id' => "B", 'a' => 'b'})
+          
+          docs = [{"_id" => 'A', "a" => 1, '_rev' => 'the-revision'}, {'value' => 3}]
+          @db.bulk_save(docs)
+          
+          assert_equal({'_id' => 'A', 'a' => 1, '_rev' => 'the-revision'}, @db.get('A'))
+        end
+        
+        should "do deletes" do
+          @db.save_doc({'_id' => "A", 'a' => 'b'})
+          @db.save_doc({'_id' => "B", 'a' => 'b'})
+          
+          docs = [{"_id" => 'A', "a" => 1, '_rev' => 'the-revision', '_deleted' => true}]
+          @db.bulk_save(docs)
+          
+          assert_raise(RestClient::ResourceNotFound) do
+            @db.get('A')
+          end
+        end
+        
+      end
     end
     
     context "Document API" do

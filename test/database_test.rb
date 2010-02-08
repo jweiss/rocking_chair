@@ -343,5 +343,61 @@ class DatabaseTest < Test::Unit::TestCase
       
     end
     
+    context "when handling bulk updates" do
+      setup do
+        @db.stubs(:rev).returns('the-revision')
+      end
+      
+      should "insert all documents" do
+        Fakecouch::Database.stubs(:uuid).returns('foo-id')
+        assert_equal 0, @db.document_count
+        docs = {'docs' => [{"_id" => 'a', "value" => 1}, {"_id" => 'b', 'value' => 2}, {'value' => 3}]}.to_json
+        assert_equal([
+          {'id' => 'a', "rev" => 'the-revision'},
+          {'id' => 'b', "rev" => 'the-revision'},
+          {'id' => 'foo-id', "rev" => 'the-revision'}
+        ].to_json, @db.bulk(docs))
+      end
+      
+      should "update documents" do
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        
+        docs = {'docs' => [{"_id" => 'A', "data" => 1, '_rev' => 'the-revision'}]}.to_json
+        @db.bulk(docs)
+        assert_equal({
+          '_id' => 'A',
+          '_rev' => 'the-revision',
+          'data' => 1
+        }, JSON.parse(@db['A']))
+      end
+      
+      should "handle conflics gracefully" do
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        
+        docs = {'docs' => [{"_id" => 'A', "data" => 1, '_rev' => 'the-revision'}, {"_id" => 'B', "data" => 1, '_rev' => 'no-such-revision'}]}.to_json
+        assert_nothing_raised do
+          assert_equal([
+            {'id' => 'A', "rev" => 'the-revision'},
+            {'id' => 'B', "error" => 'conflict', 'reason' => 'Document update conflict.'}
+          ].to_json, @db.bulk(docs))
+        end
+      end
+      
+      should "delete" do
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        
+        docs = {'docs' => [{"_id" => 'A', "data" => 1, '_rev' => 'the-revision'}, {"_id" => 'B', "data" => 1, '_rev' => 'the-revision', '_deleted' => true}]}.to_json
+        assert_nothing_raised do
+          assert_equal([
+            {'id' => 'A', "rev" => 'the-revision'},
+            {'id' => 'B', "rev" => 'the-revision'}
+          ].to_json, @db.bulk(docs))
+        end
+      end
+    end
+    
   end
 end
