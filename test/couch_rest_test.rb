@@ -98,6 +98,33 @@ class CouchRestTest < Test::Unit::TestCase
             ]
           }, @db.documents('descending' => true))
         end
+        
+        should "start by the given key" do
+          @db.save_doc({'_id' => "C", 'a' => 'b'})
+          @db.save_doc({'_id' => "B", 'a' => 'b'})
+          @db.save_doc({'_id' => "A", 'a' => 'b'})
+          
+          assert_equal({
+            "total_rows" => 3, "offset" => 1, "rows" => [
+              {"id" => "B", "key" => "B", "value" => {"rev" => "the-revision"}},
+              {"id" => "C", "key" => "C", "value" => {"rev" => "the-revision"}}
+            ]
+          }, @db.documents(:startkey => 'B'))
+        end
+        
+        should "start by the given key, include docs, descending and limit" do
+          @db.save_doc({'_id' => "C", 'a' => 'b'})
+          @db.save_doc({'_id' => "B", 'a' => 'b'})
+          @db.save_doc({'_id' => "A", 'a' => 'b'})
+          @db.save_doc({'_id' => "D", 'a' => 'b'})
+          
+          assert_equal({
+            "total_rows" => 4, "offset" => 1, "rows" => [
+              {"id" => "C", "key" => "C", "value" => {"rev" => "the-revision", '_rev' => 'the-revision', '_id' => 'C', 'a' => 'b'}},
+              {"id" => "B", "key" => "B", "value" => {"rev" => "the-revision", '_rev' => 'the-revision', '_id' => 'B', 'a' => 'b'}}
+            ]
+          }, @db.documents(:startkey => 'C', :limit => 2, :include_docs => true, :descending => true))
+        end
       end
       
       # should "accept bulk inserts/updates" do

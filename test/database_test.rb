@@ -226,6 +226,121 @@ class DatabaseTest < Test::Unit::TestCase
         }.to_json, @db.all_documents('descending' => true))
       end
       
+      should "start by the given key" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 3, "offset" => 1, "rows" => [
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
+            {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents('startkey' => 'B'))
+      end
+      
+      should "start by the given key and ignore quotes" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 3, "offset" => 1, "rows" => [
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
+            {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents('startkey' => '"B"'))
+      end
+      
+      should "combine start and limit" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        @db["D"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 4, "offset" => 1, "rows" => [
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents('startkey' => 'B', 'limit' => '1'))
+      end
+      
+      should "combine start and descending" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        @db["D"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 4, "offset" => 2, "rows" => [
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
+            {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents('startkey' => 'B', 'descending' => 'true'))
+      end
+      
+      should "combine start, limit, and descending" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        @db["D"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 4, "offset" => 2, "rows" => [
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents('startkey' => 'B', 'descending' => 'true', 'limit' => '1'))
+      end
+      
+      should "end by the given key" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 3, "offset" => 0, "rows" => [
+            {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}},
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents('endkey' => 'B'))
+      end
+      
+      should "combine start and end key" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        @db["D"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 4, "offset" => 1, "rows" => [
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
+            {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
+          ]
+        }.to_json, @db.all_documents('startkey' => 'B', 'endkey' => 'C'))
+      end
+      
+      should "combine start, end key, and include_docs" do
+        @db.stubs(:rev).returns('rev')
+        @db["C"] = {"data" => "Z"}.to_json
+        @db["A"] = {"data" => "Z"}.to_json
+        @db["B"] = {"data" => "Z"}.to_json
+        @db["D"] = {"data" => "Z"}.to_json
+        
+        assert_equal({
+          "total_rows" => 4, "offset" => 1, "rows" => [
+            {"id" => "B", "key" => "B", "value" => {"rev" => "rev", '_rev' => 'rev', 'data' => 'Z', '_id' => 'B'}},
+            {"id" => "C", "key" => "C", "value" => {"rev" => "rev", '_rev' => 'rev', 'data' => 'Z', '_id' => 'C'}}
+          ]
+        }.to_json, @db.all_documents('startkey' => 'B', 'endkey' => 'C', 'include_docs' => 'true'))
+      end
+      
     end
     
   end

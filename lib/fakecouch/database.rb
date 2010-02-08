@@ -102,20 +102,75 @@ module Fakecouch
     
     def all_documents(options = {})
       options = {
-        'descending' => false
+        'descending' => false,
+        'startkey' => nil,
+        'endkey' => nil,
+        'limit' => nil,
+        'include_docs' => false
       }.update(options)
-      options.assert_valid_keys('descending')
+      options.assert_valid_keys('descending', 'startkey', 'endkey', 'limit', 'include_docs')
+      keys = (options['descending'].to_s == 'true') ? storage.keys.sort{|x,y| y <=> x } : storage.keys.sort{|x,y| x <=> y }
       
-      sorted_keys = (options['descending'].to_s == 'true') ? storage.keys.sort{|x,y| y <=> x } : storage.keys.sort{|x,y| x <=> y }
-      rows = sorted_keys.map do |key|
+      keys, offset = filter_by_startkey(keys, options)
+      keys = filter_by_endkey(keys, options)
+      keys = filter_by_limit(keys, options)
+      
+      rows = keys.map do |key|
         document = JSON.parse(storage[key])
-        {'id' => document['_id'], 'key' => document['_id'], 'value' => {'rev' => document['_rev']}}
+        if options['include_docs'].to_s == 'true'
+          {'id' => document['_id'], 'key' => document['_id'], 'value' => document.update('rev' => document['_rev'])}
+        else
+          {'id' => document['_id'], 'key' => document['_id'], 'value' => {'rev' => document['_rev']}}
+        end
       end
       
-      { "total_rows" => document_count, "offset" => 0, "rows" => rows}.to_json
+      { "total_rows" => document_count, "offset" => offset, "rows" => rows}.to_json
     end
 
   protected
+  
+    def filter_by_limit(keys, options)
+      if options['limit']
+        keys = keys[0, options['limit'].to_i]
+      end
+      keys
+    end
+  
+    def filter_by_endkey(keys, options)
+      if options['endkey']
+        options['endkey'] = options['endkey'].gsub(/\A"/, '').gsub(/"\Z/, '')
+        endkey_found = false
+        keys = keys.map do |key|
+          if key == options['endkey']
+            endkey_found = true
+            key
+          elsif endkey_found
+            nil
+          else
+            key
+          end
+        end.compact
+      end
+      keys
+    end
+  
+    def filter_by_startkey(keys, options)
+      offset = 0
+      if options['startkey']
+        options['startkey'] = options['startkey'].gsub(/\A"/, '').gsub(/"\Z/, '')
+        startkey_found = false
+        keys = keys.map do |key|
+          if startkey_found || key == options['startkey']
+            startkey_found = true
+            key
+          else
+            offset += 1
+            nil
+          end
+        end.compact
+      end
+      return [keys, offset]
+    end
   
     def exists?(doc_id)
       storage.has_key?(doc_id)
