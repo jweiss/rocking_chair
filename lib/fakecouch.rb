@@ -12,12 +12,20 @@ require "fakecouch/couch_rest_http_adapter"
 
 module Fakecouch
   
+  @_fake_couch_enabled
+  
   def self.enable
-    HttpAbstraction.extend(Fakecouch::CouchRestHttpAdapter)
+    unless @_fake_couch_enabled
+      HttpAbstraction.extend(Fakecouch::CouchRestHttpAdapter)
+      @_fake_couch_enabled = true
+    end
   end
   
   def self.disable
-    HttpAbstraction.extend(RestClientAdapter::API)
+    if @_fake_couch_enabled
+      HttpAbstraction.extend(RestClientAdapter::API)
+      @_fake_couch_enabled = false
+    end
   end
   
 end
