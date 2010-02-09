@@ -7,6 +7,8 @@ require 'mocha'
 require File.dirname(__FILE__) + "/fixtures/extended_couch_rest_fixtures"
 require File.dirname(__FILE__) + "/fixtures/simply_stored_fixtures"
 
+Fakecouch.enable
+
 def assert_error_code(code, &blk)
   ex = nil
   begin

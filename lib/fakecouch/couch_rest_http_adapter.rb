@@ -78,5 +78,3 @@ module Fakecouch
     
   end
 end
-
-HttpAbstraction.extend(Fakecouch::CouchRestHttpAdapter)
