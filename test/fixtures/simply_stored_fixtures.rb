@@ -27,3 +27,10 @@ class Manager
   property :lastname
   has_one :project
 end
+
+class CustomViewUser
+  include SimplyStored::Couch
+  
+  property :tags
+  view :by_tags, :type => SimplyStored::Couch::Views::ArrayPropertyViewSpec, :key => :tags
+end

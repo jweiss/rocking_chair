@@ -163,8 +163,7 @@ class SimplyStoredTest < Test::Unit::TestCase
             assert deleted_user.save
             
             deleted_user.destroy
-            
-            
+
             assert_equal ['Bart'], User.all.map(&:firstname)
             assert_equal ['Bart', 'Pete'].sort, User.find(:all, :with_deleted => true).map(&:firstname).sort
           end
@@ -187,12 +186,27 @@ class SimplyStoredTest < Test::Unit::TestCase
             
             assert_equal [user.id], project.users.map(&:id)
             user.destroy
-            assert_equal [], project.users(:force_reload => true).map(&:id)
+            
+            assert_equal [], project.users(:force_reload => true, :with_deleted => false).map(&:id)
+            assert_equal [user.id], project.users(:force_reload => true, :with_deleted => true).map(&:id)
           end
           
         end
       end
       
+      context "With array views" do
+
+        should "find objects with one match of the array" do
+          CustomViewUser.create(:tags => ["agile", "cool", "extreme"])
+          CustomViewUser.create(:tags => ["agile"])
+          assert_equal 2, CustomViewUser.find_all_by_tags("agile").size
+        end
+
+        should "find the object when the property is not an array" do
+          CustomViewUser.create(:tags => "agile")
+          assert_equal 1, CustomViewUser.find_all_by_tags("agile").size
+        end
+      end
       
     end
      

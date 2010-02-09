@@ -157,14 +157,19 @@ module Fakecouch
         'limit' => nil,
         'key' => nil,
         'descending' => false,
-        'include_docs' => false
+        'include_docs' => false,
+        'without_deleted' => false
       }.update(options)
-      options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs')
+      options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted')
 
       if view_name.match(/_withoutdeleted\Z/) || view_name.match(/_without_deleted\Z/)
-        view_name = view_name.gsub(/_withoutdeleted\Z/, '').gsub(/_without_deleted\Z/, '')
         options['without_deleted'] = true
+      elsif view_name.match(/_withdeleted\Z/) || view_name.match(/_with_deleted\Z/)
+        options['without_deleted'] = false
+      else
+        options['without_deleted'] = view_doc['map'].match(/\"soft\" deleted/) ? true : nil
       end
+      view_name = view_name.gsub(/_withoutdeleted\Z/, '').gsub(/_without_deleted\Z/, '').gsub(/_withdeleted\Z/, '').gsub(/_with_deleted\Z/, '')
 
       if match = view_name.match(/\Aall_documents\Z/)
         find_all(design_doc_name, options)
@@ -238,7 +243,11 @@ module Fakecouch
       if attr_value
         keys = keys.select do |key| 
           document = collection[key]
-          attribute_access(attribute, document) == attr_value
+          if attribute_access(attribute, document).is_a?(Array)
+            attribute_access(attribute, document).include?(attr_value)
+          else
+            attribute_access(attribute, document) == attr_value
+          end
         end
       else
         keys = keys.select do |key| 
