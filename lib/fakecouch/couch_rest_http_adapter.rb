@@ -20,7 +20,7 @@ module Fakecouch
       elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.load($1, $2, parameters)
       elsif url.match(/\A(#{URL_PARAMETER})\/_design\/(#{URL_PARAMETER})\Z/)
-        Fakecouch::Server.load($1, $2, parameters)
+        Fakecouch::Server.load($1, "_design/#{$2}", parameters)
       elsif url.match(/\A(#{URL_PARAMETER})\/_design\/(#{URL_PARAMETER})\/_view\/(#{URL_PARAMETER})\Z/)
         Fakecouch::Server.view($1, $2, $3, parameters)
       else

@@ -161,6 +161,11 @@ module Fakecouch
       }.update(options)
       options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs')
 
+      if view_name.match(/_withoutdeleted\Z/) || view_name.match(/_without_deleted\Z/)
+        view_name = view_name.gsub(/_withoutdeleted\Z/, '').gsub(/_without_deleted\Z/, '')
+        options['without_deleted'] = true
+      end
+
       if match = view_name.match(/\Aall_documents\Z/)
         find_all(design_doc_name, options)
       elsif match = view_name.match(/\Aby_(\w+)\Z/)
@@ -178,6 +183,7 @@ module Fakecouch
       ruby_store = copy_storage_to_ruby_hash
       keys = ruby_store.keys
       keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
+      keys = filter_deleted_items(keys, ruby_store) if options['without_deleted'].to_s == 'true'
       
       view_json(keys, ruby_store, options)
     end
@@ -189,7 +195,8 @@ module Fakecouch
       keys = ruby_store.keys
       keys = filter_items_without_attribute_value(keys, ruby_store, foreign_key_id(belongs_to), options['key'])
       keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
-      
+      keys = filter_deleted_items(keys, ruby_store) if options['without_deleted'].to_s == 'true'
+
       view_json(keys, ruby_store, options)
     end
   
@@ -204,9 +211,17 @@ module Fakecouch
         keys = filter_items_without_attribute_value(keys, ruby_store, attribute, filter_keys[index])
       end
       keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
+      keys = filter_deleted_items(keys, ruby_store) if options['without_deleted'].to_s == 'true'
       keys = sort_by_attribute(keys, ruby_store, attributes.first, options)
       
       view_json(keys, ruby_store, options)
+    end
+    
+    def filter_deleted_items(keys, collection)
+      keys = keys.delete_if do |key| 
+        document = collection[key]
+        attribute_access('deleted_at', document).present?
+      end
     end
     
     def sort_by_attribute(keys, collection, attribute, options)

@@ -149,11 +149,47 @@ class SimplyStoredTest < Test::Unit::TestCase
         end
         
         context "with deleted" do
-          should "ignore deleted in find all"
-          should "ignore deleted in find first"
-          should "ignore deleted in belongs to"
-          should "ignore deleted in has_one"
-          should "ignore deleted in has_many"
+          setup do
+            Fakecouch::Server.reset
+            CouchPotato::Config.database_name = 'fake_simply_stored'
+            recreate_db
+          end
+          
+          should "ignore deleted in find all but load them in all with deleted" do
+            user = User.new(:firstname => 'Bart', :lastname => 'S')
+            assert user.save
+            
+            deleted_user = User.new(:firstname => 'Pete', :lastname => 'S')
+            assert deleted_user.save
+            
+            deleted_user.destroy
+            
+            
+            assert_equal ['Bart'], User.all.map(&:firstname)
+            assert_equal ['Bart', 'Pete'].sort, User.find(:all, :with_deleted => true).map(&:firstname).sort
+          end
+          
+          should "ignore deleted in find first" do
+            user = User.new(:firstname => 'Bart', :lastname => 'S')
+            assert user.save
+            assert_equal 'Bart', User.find(:first).firstname
+            user.destroy
+            assert_nil User.first
+            assert_equal 'Bart', User.find(:first, :with_deleted => true).firstname
+          end
+          
+          should "ignore deleted in belongs_to/has_many" do
+            project = Project.new(:title => 'secret')
+            assert project.save
+            
+            user = User.new(:firstname => 'Bart', :lastname => 'S', :project => project)
+            assert user.save
+            
+            assert_equal [user.id], project.users.map(&:id)
+            user.destroy
+            assert_equal [], project.users(:force_reload => true).map(&:id)
+          end
+          
         end
       end
       

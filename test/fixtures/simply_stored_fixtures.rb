@@ -7,6 +7,8 @@ class User
   property :lastname
   belongs_to :project
   
+  enable_soft_delete
+  
   view :by_name, :key => :name
 end
 
