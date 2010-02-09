@@ -1,6 +1,6 @@
 module Fakecouch
   module Server
-    BASE_URL = "http://127.0.0.1:5984/"
+    BASE_URL = /(http:\/\/)?127\.0\.0\.1:5984\//
     
     def self.databases
       @databases ||= {}
@@ -97,6 +97,13 @@ module Fakecouch
     def self.bulk(db_name, options = {})
       return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].bulk(options)
+    rescue Fakecouch::Error => e
+      e.raise_rest_client_error
+    end
+    
+    def self.view(db_name, design_doc_id, view_name, options = {})
+      return respond_with_error(404) unless databases.has_key?(db_name)
+      databases[db_name].view(design_doc_id, view_name, options)
     rescue Fakecouch::Error => e
       e.raise_rest_client_error
     end

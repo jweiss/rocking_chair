@@ -257,7 +257,7 @@ class CouchRestTest < Test::Unit::TestCase
           Fakecouch::Database.expects(:uuid).returns('5')
           assert_equal 0, @db.info['doc_count']
           assert_equal({"rev"=>"the-revision", "id"=>"5", "ok"=>true}, 
-                       CouchRest.post(Fakecouch::Server::BASE_URL + 'fakecouch/', {'content' => 'here'}))
+                       CouchRest.post('127.0.0.1:5984/fakecouch/', {'content' => 'here'}))
           assert_equal 1, @db.info['doc_count']
         end
       end

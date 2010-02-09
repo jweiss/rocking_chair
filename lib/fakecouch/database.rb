@@ -145,8 +145,101 @@ module Fakecouch
       
       { "total_rows" => document_count, "offset" => offset, "rows" => rows}.to_json
     end
+    
+    def view(design_doc_name, view_name, options = {})
+      raise ArgumentError, "Need design_doc_name and view_name" unless design_doc_name.present? && view_name.present?
+      raise_404 unless self.storage["_design/#{design_doc_name}"]
+      design_doc = JSON.parse(self.storage["_design/#{design_doc_name}"])
+      view_doc = design_doc['views'][view_name] || raise_404
+      
+      options = {
+        'reduce' => false,
+        'limit' => nil,
+        'key' => nil,
+        'descending' => false,
+        'include_docs' => false
+      }.update(options)
+      options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs')
+
+      if match = view_name.match(/\Aall_documents\Z/)
+        find_all(design_doc_name, options)
+      elsif match = view_name.match(/\Aby_(\w+)\Z/)
+        find_by_attribute(match[1], design_doc_name, options)
+      elsif match = view_name.match(/\Aassociation_#{design_doc_name}_belongs_to_(\w+)\Z/)
+        find_belongs_to(match[1], design_doc_name, options)
+      else
+        raise "Unknown View implementation for view #{view_name.inspect} in design document _design/#{design_doc_name}"
+      end
+    end
 
   protected
+  
+    def find_all(design_doc_name, options)
+      ruby_store = copy_storage_to_ruby_hash
+      keys = ruby_store.keys
+      keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
+      
+      view_json(keys, ruby_store, options)
+    end
+  
+    def find_belongs_to(belongs_to, design_doc_name, options)
+      options['key'] = ActiveSupport::JSON.decode(options['key']) if options['key']
+      
+      ruby_store = copy_storage_to_ruby_hash
+      keys = ruby_store.keys
+      keys = filter_items_without_attribute_value(keys, ruby_store, foreign_key_id(belongs_to), options['key'])
+      keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
+      
+      view_json(keys, ruby_store, options)
+    end
+  
+    def find_by_attribute(attribute_string, design_doc_name, options)
+      attributes = attribute_string.split("_and_")
+      options['key'] = ActiveSupport::JSON.decode(options['key']) if options['key']
+      filter_keys = options['key'].is_a?(Array) ? options['key'] : [options['key']]
+      ruby_store = copy_storage_to_ruby_hash
+
+      keys = ruby_store.keys
+      attributes.each_with_index do |attribute, index|
+        keys = filter_items_without_attribute_value(keys, ruby_store, attribute, filter_keys[index])
+      end
+      keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
+      keys = sort_by_attribute(keys, ruby_store, attributes.first, options)
+      
+      view_json(keys, ruby_store, options)
+    end
+    
+    def sort_by_attribute(keys, collection, attribute, options)
+      keys = (options['descending'].to_s == 'true') ? 
+        keys.sort{|x,y| attribute_access(attribute, collection[y]) <=> attribute_access(attribute, collection[x]) } : 
+        keys.sort{|x,y| attribute_access(attribute, collection[x]) <=> attribute_access(attribute, collection[y]) }
+    end
+    
+    def attribute_access(attr_name, doc)
+      doc.respond_to?(:_document) ? doc._document[attr_name] : doc[attr_name]
+    end
+    
+    def filter_items_without_attribute_value(keys, collection, attribute, attr_value)
+      if attr_value
+        keys = keys.select do |key| 
+          document = collection[key]
+          attribute_access(attribute, document) == attr_value
+        end
+      else
+        keys = keys.select do |key| 
+          document = collection[key]
+          attribute_access(attribute, document).present?
+        end
+      end
+    end
+    
+    def filter_items_without_correct_ruby_class(keys, collection, klass_name)
+      klass_name = klass_name.classify
+      keys = keys.select do |key| 
+        document = collection[key]
+        attribute_access('ruby_class', document).to_s.classify == klass_name
+      end
+    end
   
     def filter_by_limit(keys, options)
       if options['limit']
@@ -202,6 +295,10 @@ module Fakecouch
     def raise_409
       raise Fakecouch::Error.new(409, 'conflict', "Document update conflict.")
     end
+    
+    def raise_500
+      raise Fakecouch::Error.new(500, 'invalid', "the document is invalid.")
+    end
   
     def state_tuple(_id, _rev)
       {"ok" => true, "id" =>  _id, "rev" => _rev }.to_json
@@ -219,16 +316,57 @@ module Fakecouch
     def insert(doc_id, json)
       json.delete('_rev')
       json.delete('_id')
-      json[:_rev] = rev
-      json[:_id] = doc_id || self.class.uuid
-      
+      json['_rev'] = rev
+      json['_id'] = doc_id || self.class.uuid
+      validate_document(json)
       storage[doc_id] = json.to_json
       
-      state_tuple(json[:_id], json[:_rev])
+      state_tuple(json['_id'], json['_rev'])
+    end
+    
+    def validate_document(doc)
+      if design_doc?(doc)
+        raise_500 unless doc['views'].is_a?(Hash)
+      end
+    end
+    
+    def design_doc?(doc)
+      doc['_id'] && doc['_id'].match(/_design\/[a-zA-Z0-9\_\-]+/)
     end
     
     def matching_revision?(existing_record, rev)
-      JSON.parse(existing_record)['_rev'] == rev
+      document = JSON.parse(existing_record)
+      attribute_access('_rev', document) == rev
+    end
+    
+    def copy_storage_to_ruby_hash
+      ruby_store = storage.dup
+      ruby_store.each{|k,v| ruby_store[k] = JSON.parse(v) }
+      ruby_store
+    end
+    
+    def foreign_key_id(name)
+      name.underscore.gsub('/','__').gsub('::','__') + "_id"
+    end
+    
+    def view_json(keys, collection, options)
+      offset = 0
+      total_size = keys.size
+      keys = keys[0, options['limit'].to_i] if options['limit']
+      
+      if options['reduce'].to_s == 'true'
+        { "rows" => [{'key' => options['key'], 'value' => keys.size }]}.to_json
+      else
+        rows = keys.map do |key|
+          document = collection[key]
+          if options['include_docs'].to_s == 'true'
+            {'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }
+          else
+            {'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil}
+          end
+        end
+        { "total_rows" => total_size, "offset" => offset, "rows" => rows}.to_json
+      end
     end
     
   end
