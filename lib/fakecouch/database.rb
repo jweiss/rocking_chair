@@ -158,9 +158,14 @@ module Fakecouch
         'key' => nil,
         'descending' => false,
         'include_docs' => false,
-        'without_deleted' => false
+        'without_deleted' => false,
+        'endkey' => nil,
+        'startkey' => nil,
+        'endkey_docid' => nil,
+        'startkey_docid' => nil
       }.update(options)
-      options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted')
+      options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted', 'endkey', 'startkey', 'endkey_docid', 'startkey_docid')
+      jsonfy_options(options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
 
       if view_name.match(/_withoutdeleted\Z/) || view_name.match(/_without_deleted\Z/)
         options['without_deleted'] = true
@@ -193,12 +198,11 @@ module Fakecouch
       view_json(keys, ruby_store, options)
     end
   
-    def find_belongs_to(belongs_to, design_doc_name, options)
-      options['key'] = ActiveSupport::JSON.decode(options['key']) if options['key']
-      
+    def find_belongs_to(belongs_to, design_doc_name, options)      
       ruby_store = copy_storage_to_ruby_hash
       keys = ruby_store.keys
-      keys = filter_items_without_attribute_value(keys, ruby_store, foreign_key_id(belongs_to), options['key'])
+      
+      keys = filter_items_by_key(keys, [foreign_key_id(belongs_to)], ruby_store, options)
       keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
       keys = filter_deleted_items(keys, ruby_store) if options['without_deleted'].to_s == 'true'
 
@@ -207,19 +211,49 @@ module Fakecouch
   
     def find_by_attribute(attribute_string, design_doc_name, options)
       attributes = attribute_string.split("_and_")
-      options['key'] = ActiveSupport::JSON.decode(options['key']) if options['key']
-      filter_keys = options['key'].is_a?(Array) ? options['key'] : [options['key']]
-      ruby_store = copy_storage_to_ruby_hash
 
+      ruby_store = copy_storage_to_ruby_hash
       keys = ruby_store.keys
-      attributes.each_with_index do |attribute, index|
-        keys = filter_items_without_attribute_value(keys, ruby_store, attribute, filter_keys[index])
-      end
+      
+      keys = filter_items_by_key(keys, attributes, ruby_store, options)
       keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
       keys = filter_deleted_items(keys, ruby_store) if options['without_deleted'].to_s == 'true'
       keys = sort_by_attribute(keys, ruby_store, attributes.first, options)
       
       view_json(keys, ruby_store, options)
+    end
+    
+    def filter_items_by_key(keys, attributes, collection, options)
+      if options['startkey']
+        keys = filter_items_by_range(keys, attributes, collection, options)
+      else
+        keys = filter_items_by_exact_key(keys, attributes, collection, options)
+      end
+    end
+    
+    def filter_items_by_exact_key(keys, attributes, collection, options)
+      filter_keys = options['key'].is_a?(Array) ? options['key'] : [options['key']]
+      attributes.each_with_index do |attribute, index|
+        keys = filter_items_without_attribute_value(keys, collection, attribute, filter_keys[index])
+      end
+      keys
+    end
+    
+    def filter_items_by_range(keys, attributes, collection, options)
+      start_keys = options['startkey'].is_a?(Array) ? options['startkey'] : [options['startkey']]
+      end_keys = options['endkey'].is_a?(Array) ? options['endkey'] : [options['endkey']]
+      
+      attributes.each_with_index do |attribute, index|
+        keys = filter_items_not_in_range(keys, collection, attribute, start_keys[index], end_keys[index])
+      end
+      keys
+    end
+    
+    def filter_items_not_in_range(keys, collection, attribute, start_key, end_key)
+      keys = keys.select do |key| 
+        document = collection[key]
+        attribute_access(attribute, document) && (attribute_access(attribute, document) >= start_key) && (attribute_access(attribute, document) <= end_key)
+      end
     end
     
     def filter_deleted_items(keys, collection)
@@ -230,6 +264,7 @@ module Fakecouch
     end
     
     def sort_by_attribute(keys, collection, attribute, options)
+      attribute ||= '_id'
       keys = (options['descending'].to_s == 'true') ? 
         keys.sort{|x,y| attribute_access(attribute, collection[y]) <=> attribute_access(attribute, collection[x]) } : 
         keys.sort{|x,y| attribute_access(attribute, collection[x]) <=> attribute_access(attribute, collection[y]) }
@@ -286,6 +321,21 @@ module Fakecouch
             key
           end
         end.compact
+      end
+      keys
+    end
+    
+    def filter_by_startkey_docid_and_endkey_docid(keys, collection, options)
+      if options['startkey_docid'] || options['endkey_docid']
+        keys = keys.select do |key|
+          if options['startkey_docid'] && options['endkey_docid']
+            ( key >= options['startkey_docid']) && (key <= options['endkey_docid'])
+          elsif options['startkey_docid']
+            key >= options['startkey_docid']
+          else
+            key <= options['endkey_docid']
+          end
+        end
       end
       keys
     end
@@ -373,10 +423,22 @@ module Fakecouch
       name.underscore.gsub('/','__').gsub('::','__') + "_id"
     end
     
+    def jsonfy_options(options, *keys)
+      keys.each do |key|
+        options[key] = ActiveSupport::JSON.decode(options[key]) if options[key]
+      end
+    end
+    
     def view_json(keys, collection, options)
       offset = 0
       total_size = keys.size
+      keys = filter_by_startkey_docid_and_endkey_docid(keys, collection, options)
       keys = keys[0, options['limit'].to_i] if options['limit']
+      
+      key_description = {'key' => options['key']}
+      key_description = {'startkey' => options['startkey'], 'endkey' => options['endkey']} if options['startkey']
+      key_description.update('startkey_docid' => options['startkey_docid']) if options['startkey_docid']
+      key_description.update('endkey_docid' => options['endkey_docid']) if options['endkey_docid']
       
       if options['reduce'].to_s == 'true'
         { "rows" => [{'key' => options['key'], 'value' => keys.size }]}.to_json
@@ -384,9 +446,10 @@ module Fakecouch
         rows = keys.map do |key|
           document = collection[key]
           if options['include_docs'].to_s == 'true'
-            {'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }
+            {'id' => attribute_access('_id', document), 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }.merge(key_description)
           else
-            {'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil}
+            {'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil}.merge(key_description)
+            #{'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil}
           end
         end
         { "total_rows" => total_size, "offset" => offset, "rows" => rows}.to_json

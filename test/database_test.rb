@@ -620,6 +620,64 @@ class DatabaseTest < Test::Unit::TestCase
               ]}.to_json, @db.view('user', 'by_firstname_and_lastname', 'key' => ["Alf", "Bert"].to_json, 'include_docs' => 'true'))
           end
 
+          should "support startkey and endkey parameters" do
+            @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
+            @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
+            @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+            
+            assert_equal(JSON.parse({
+              "total_rows" => 2,
+              "offset" => 0,
+              "rows" => [{
+                "id" => "user_1",
+                "endkey" => "Alf",
+                "value" => nil,
+                "startkey" => "Alf",
+                "doc" => {
+                  "firstname" => "Alf",
+                  "lastname" => "Bert",
+                  'ruby_class' => 'User',
+                  '_rev' => 'the-rev',
+                  '_id' => 'user_1' }
+                }, {
+                "id" => "user_3",
+                "endkey" => "Alf",
+                "value" => nil,
+                "startkey" => "Alf",
+                "doc" => {
+                  "firstname" => "Alf",
+                  "lastname" => "Horst",
+                  'ruby_class' => 'User',
+                  '_rev' => 'the-rev',
+                  '_id' => 'user_3' }
+                }
+              ]}.to_json), JSON.parse(@db.view('user', 'by_firstname', 'startkey' => "Alf".to_json, 'endkey' => "Alf".to_json, 'include_docs' => 'true')))
+          end
+          
+          should "support startkey/endkey combined with startkey_docid/endkey_docid parameters" do
+            @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
+            @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
+            @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+            
+            assert_equal(JSON.parse({
+              "total_rows" => 2,
+              "offset" => 0,
+              "rows" => [{
+                "id" => "user_3",
+                "startkey" => "Alf",
+                "endkey" => "Alf",
+                "startkey_docid" => "user_3",
+                "endkey_docid" => "user_3",
+                "value" => nil,
+                "doc" => {
+                  "firstname" => "Alf",
+                  "lastname" => "Horst",
+                  'ruby_class' => 'User',
+                  '_rev' => 'the-rev',
+                  '_id' => 'user_3' }
+                }
+              ]}.to_json), JSON.parse(@db.view('user', 'by_firstname', 'startkey' => "Alf".to_json, 'endkey' => "Alf".to_json, 'startkey_docid' => "user_3".to_json, "endkey_docid" => 'user_3'.to_json, 'include_docs' => 'true', 'limit' => '1')))
+          end
         end
         
         context "belongs_to" do
