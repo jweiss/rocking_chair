@@ -8,7 +8,7 @@ module Fakecouch
     end
     
     def self.uuid
-      UUIDTools::UUID.random_create().to_s
+      UUIDTools::UUID.random_create().to_s.gsub('-', '')
     end
     
     def self.uuids(count)
