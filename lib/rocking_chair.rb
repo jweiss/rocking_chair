@@ -1,5 +1,10 @@
 require "rubygems"
+require 'active_support/core_ext/kernel/reporting'
 require "active_support/core_ext/hash"
+require "active_support/core_ext/module"
+require 'active_support/deprecation'
+require "active_support/core_ext/object/blank"
+require 'active_support/json'
 require "uuidtools"
 require "cgi"
 require "couchrest"
