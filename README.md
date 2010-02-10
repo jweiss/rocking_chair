@@ -1,5 +1,6 @@
 An in-memory CouchDB implementation in Ruby for [couchrest](http://github.com/jchris/couchrest) and [SimplyStored](http://github.com/peritor/simply_stored). 
-Works for the database and document API, by_attribute views, and for SimplyStored generated views
+Works for the database and document API, by_attribute views, and for SimplyStored generated views. 
+This way your tests will no longer depend on CouchDB and can run against an in-memory database.
 
 It intercepts the HTTP-API calls of couchrest by implementing a 
 HTTPAdapter for [couchrest](http://github.com/jchris/couchrest). It then delegates those calls to the
@@ -39,3 +40,9 @@ just deactivate RockingChair:
 
     RockingChair.disable
     
+    
+Caveats
+=============
+
+At the moment the performance is not as good as it could be as there is a lot of serialization to and from JSON going on.
+This will be improved by storing not only the JSON tree but also the Ruby representation of the stored objects.
