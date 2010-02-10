@@ -4,22 +4,24 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{fakecouch}
-  s.version = "0.0.1"
+  s.name = %q{rocking_chair}
+  s.version = "0.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jonathan Weiss"]
-  s.date = %q{2010-02-09}
+  s.date = %q{2010-02-10}
   s.description = %q{In-memory CouchDB for Couchrest and SimplyStored. Works for database and document API, by_attribute views, and for SimplyStored generated views}
-  s.email = %q{info@peritor.com}
+  s.email = %q{jw@innerewut.de}
   s.files = [
-    "lib/fakecouch.rb",
-     "lib/fakecouch/couch_rest_http_adapter.rb",
-     "lib/fakecouch/database.rb",
-     "lib/fakecouch/error.rb",
-     "lib/fakecouch/server.rb"
+    "lib/rocking_chair.rb",
+     "lib/rocking_chair/couch_rest_http_adapter.rb",
+     "lib/rocking_chair/database.rb",
+     "lib/rocking_chair/error.rb",
+     "lib/rocking_chair/helper.rb",
+     "lib/rocking_chair/server.rb",
+     "lib/rocking_chair/view.rb"
   ]
-  s.homepage = %q{http://github.com/jweiss/fakecouch}
+  s.homepage = %q{http://github.com/jweiss/rocking_chair}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.5}
@@ -31,7 +33,8 @@ Gem::Specification.new do |s|
      "test/fixtures/extended_couch_rest_fixtures.rb",
      "test/fixtures/simply_stored_fixtures.rb",
      "test/simply_stored_test.rb",
-     "test/test_helper.rb"
+     "test/test_helper.rb",
+     "test/view_test.rb"
   ]
 
   if s.respond_to? :specification_version then

@@ -1,4 +1,4 @@
-module Fakecouch
+module RockingChair
   module Server
     BASE_URL = /(http:\/\/)?127\.0\.0\.1:5984\//
     
@@ -40,11 +40,11 @@ module Fakecouch
       }.update(options)
       options['count'] = options['count'].first if options['count'].is_a?(Array)
 
-      respond_with({"uuids" => Fakecouch::Database.uuids(options['count']) })
+      respond_with({"uuids" => RockingChair::Database.uuids(options['count']) })
     end
     
     def self.create_db(name)
-      databases[name] = Fakecouch::Database.new
+      databases[name] = RockingChair::Database.new
       respond_with({"ok" => true})
     end
     
@@ -56,7 +56,7 @@ module Fakecouch
     def self.store(db_name, doc_id, document, options)
       return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].store(doc_id, document, options)
-    rescue Fakecouch::Error => e
+    rescue RockingChair::Error => e
       e.raise_rest_client_error
     end
     
@@ -68,21 +68,21 @@ module Fakecouch
       
       return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].delete(doc_id, options['rev'])
-    rescue Fakecouch::Error => e
+    rescue RockingChair::Error => e
       e.raise_rest_client_error
     end
     
     def self.load(db_name, doc_id, options = {})
       return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].load(doc_id, options)
-    rescue Fakecouch::Error => e
+    rescue RockingChair::Error => e
       e.raise_rest_client_error
     end
     
     def self.load_all(db_name, options = {})
       return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].all_documents(options)
-    rescue Fakecouch::Error => e
+    rescue RockingChair::Error => e
       e.raise_rest_client_error
     end
     
@@ -90,21 +90,21 @@ module Fakecouch
       return respond_with_error(404) unless databases.has_key?(db_name)
       destination_id, revision = normalize_url(options['Destination'])
       databases[db_name].copy(doc_id, destination_id, revision['rev'])
-    rescue Fakecouch::Error => e
+    rescue RockingChair::Error => e
       e.raise_rest_client_error
     end
     
     def self.bulk(db_name, options = {})
       return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].bulk(options)
-    rescue Fakecouch::Error => e
+    rescue RockingChair::Error => e
       e.raise_rest_client_error
     end
     
     def self.view(db_name, design_doc_id, view_name, options = {})
       return respond_with_error(404) unless databases.has_key?(db_name)
       databases[db_name].view(design_doc_id, view_name, options)
-    rescue Fakecouch::Error => e
+    rescue RockingChair::Error => e
       e.raise_rest_client_error
     end
     

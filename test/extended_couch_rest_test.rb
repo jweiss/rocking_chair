@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + "/test_helper"
 class ExtendedCouchRestTest < Test::Unit::TestCase
   context "Extended use cases for CouchRest" do
     setup do
-      Fakecouch::Server.reset
+      RockingChair::Server.reset
       SERVER.create_db('couchrest-extendeddoc-example')
     end
     

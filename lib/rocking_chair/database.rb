@@ -1,4 +1,4 @@
-module Fakecouch
+module RockingChair
   class Database
     
     attr_accessor :storage
@@ -29,7 +29,7 @@ module Fakecouch
       if exists?(doc_id)
         return storage[doc_id]
       else
-        Fakecouch::Error.raise_404
+        RockingChair::Error.raise_404
       end
     end
     
@@ -42,7 +42,7 @@ module Fakecouch
       
       document = self[doc_id]
       if options['rev'] && ( ActiveSupport::JSON.decode(document)['_rev'] != options['rev']) 
-        Fakecouch::Error.raise_404
+        RockingChair::Error.raise_404
       end
       if options['revs'] && options['revs'] == 'true'
         json =  ActiveSupport::JSON.decode(document)
@@ -64,7 +64,7 @@ module Fakecouch
         json = ActiveSupport::JSON.decode(document)
         raise "is not a Hash" unless json.is_a?(Hash)
       rescue Exception => e
-        raise Fakecouch::Error.new(500, 'InvalidJSON', "the document is not a valid JSON object: #{e}")
+        raise RockingChair::Error.new(500, 'InvalidJSON', "the document is not a valid JSON object: #{e}")
       end
       
       if exists?(doc_id)
@@ -82,10 +82,10 @@ module Fakecouch
         if matching_revision?(existing, rev)
           storage.delete(doc_id)
         else
-          Fakecouch::Error.raise_409
+          RockingChair::Error.raise_409
         end
       else
-        Fakecouch::Error.raise_404
+        RockingChair::Error.raise_404
       end
     end
     
@@ -112,7 +112,7 @@ module Fakecouch
             state = JSON.parse(self.store(doc['_id'], doc.to_json))
           end
           response << {'id' => state['id'], 'rev' => state['rev']}
-        rescue Fakecouch::Error => e
+        rescue RockingChair::Error => e
            response << {'id' => doc['_id'], 'error' => e.error, 'reason' => e.reason}
         end
       end
@@ -142,7 +142,7 @@ module Fakecouch
       if matching_revision?(existing, json['_rev'])
         insert(doc_id, json)
       else
-        Fakecouch::Error.raise_409
+        RockingChair::Error.raise_409
       end
     end
   
@@ -159,7 +159,7 @@ module Fakecouch
     
     def validate_document(doc)
       if design_doc?(doc)
-        Fakecouch::Error.raise_500 unless doc['views'].is_a?(Hash)
+        RockingChair::Error.raise_500 unless doc['views'].is_a?(Hash)
       end
     end
     
@@ -169,7 +169,7 @@ module Fakecouch
     
     def matching_revision?(existing_record, rev)
       document = JSON.parse(existing_record)
-      Fakecouch::Helper.access('_rev', document) == rev
+      RockingChair::Helper.access('_rev', document) == rev
     end
         
   end

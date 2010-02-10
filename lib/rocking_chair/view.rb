@@ -1,4 +1,4 @@
-module Fakecouch
+module RockingChair
   class View
     
     attr_accessor :database, :keys, :options, :ruby_store, :design_document, :design_document_name, :view_name, :view_document
@@ -14,9 +14,9 @@ module Fakecouch
         
     def initialize(database, design_document_name, view_name, options = {})
       unless design_document_name == :all && view_name == :all
-        Fakecouch::Error.raise_404 unless database.exists?("_design/#{design_document_name}")
+        RockingChair::Error.raise_404 unless database.exists?("_design/#{design_document_name}")
         @design_document = JSON.parse(database.storage["_design/#{design_document_name}"])
-        @view_document = design_document['views'][view_name] || Fakecouch::Error.raise_404
+        @view_document = design_document['views'][view_name] || RockingChair::Error.raise_404
       end
       
       @database = database
@@ -38,7 +38,7 @@ module Fakecouch
         'startkey_docid' => nil
       }.update(options)
       @options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted', 'endkey', 'startkey', 'endkey_docid', 'startkey_docid')
-      Fakecouch::Helper.jsonfy_options(@options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
+      RockingChair::Helper.jsonfy_options(@options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
       
       normalize_view_name
     end
@@ -70,9 +70,9 @@ module Fakecouch
         rows = keys.map do |key|
           document = ruby_store[key]
           if options['include_docs'].to_s == 'true'
-            {'id' => Fakecouch::Helper.access('_id', document), 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }.merge(key_description)
+            {'id' => RockingChair::Helper.access('_id', document), 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }.merge(key_description)
           else
-            {'id' => Fakecouch::Helper.access('_id', document), 'key' => options['key'], 'value' => nil}.merge(key_description)
+            {'id' => RockingChair::Helper.access('_id', document), 'key' => options['key'], 'value' => nil}.merge(key_description)
           end
         end
         { "total_rows" => total_size, "offset" => offset, "rows" => rows}.to_json
@@ -168,9 +168,9 @@ module Fakecouch
       @keys = keys.select do |key| 
         document = ruby_store[key]
         if end_key
-          Fakecouch::Helper.access(attribute, document) && (Fakecouch::Helper.access(attribute, document) >= start_key) && (Fakecouch::Helper.access(attribute, document) <= end_key)
+          RockingChair::Helper.access(attribute, document) && (RockingChair::Helper.access(attribute, document) >= start_key) && (RockingChair::Helper.access(attribute, document) <= end_key)
         else
-          Fakecouch::Helper.access(attribute, document) && (Fakecouch::Helper.access(attribute, document) >= start_key)
+          RockingChair::Helper.access(attribute, document) && (RockingChair::Helper.access(attribute, document) >= start_key)
         end
       end
     end
@@ -178,31 +178,31 @@ module Fakecouch
     def filter_deleted_items
       @keys = keys.delete_if do |key| 
         document = ruby_store[key]
-        Fakecouch::Helper.access('deleted_at', document).present?
+        RockingChair::Helper.access('deleted_at', document).present?
       end
     end
     
     def sort_by_attribute(attribute)
       attribute ||= '_id'
       @keys = (options['descending'].to_s == 'true') ? 
-        keys.sort{|x,y| Fakecouch::Helper.access(attribute, ruby_store[y]) <=> Fakecouch::Helper.access(attribute, ruby_store[x]) } : 
-        keys.sort{|x,y| Fakecouch::Helper.access(attribute, ruby_store[x]) <=> Fakecouch::Helper.access(attribute, ruby_store[y]) }
+        keys.sort{|x,y| RockingChair::Helper.access(attribute, ruby_store[y]) <=> RockingChair::Helper.access(attribute, ruby_store[x]) } : 
+        keys.sort{|x,y| RockingChair::Helper.access(attribute, ruby_store[x]) <=> RockingChair::Helper.access(attribute, ruby_store[y]) }
     end
     
     def filter_items_without_attribute_value(attribute, attr_value)
       if attr_value
         @keys = keys.select do |key| 
           document = ruby_store[key]
-          if Fakecouch::Helper.access(attribute, document).is_a?(Array)
-            Fakecouch::Helper.access(attribute, document).include?(attr_value)
+          if RockingChair::Helper.access(attribute, document).is_a?(Array)
+            RockingChair::Helper.access(attribute, document).include?(attr_value)
           else
-            Fakecouch::Helper.access(attribute, document) == attr_value
+            RockingChair::Helper.access(attribute, document) == attr_value
           end
         end
       else
         @keys = keys.select do |key| 
           document = ruby_store[key]
-          Fakecouch::Helper.access(attribute, document).present?
+          RockingChair::Helper.access(attribute, document).present?
         end
       end
     end
@@ -211,7 +211,7 @@ module Fakecouch
       klass_name = design_document_name.classify
       @keys = keys.select do |key| 
         document = ruby_store[key]
-        Fakecouch::Helper.access('ruby_class', document).to_s.classify == klass_name
+        RockingChair::Helper.access('ruby_class', document).to_s.classify == klass_name
       end
     end
     

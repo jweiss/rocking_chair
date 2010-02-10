@@ -8,7 +8,7 @@ end
 class SimplyStoredTest < Test::Unit::TestCase
   context "Extended use cases for SimplyStored" do
     setup do
-      Fakecouch::Server.reset
+      RockingChair::Server.reset
       CouchPotato::Config.database_name = 'fake_simply_stored'
       recreate_db
     end
@@ -96,7 +96,7 @@ class SimplyStoredTest < Test::Unit::TestCase
       
       context "has_many" do
         setup do
-          Fakecouch::Server.reset
+          RockingChair::Server.reset
           CouchPotato::Config.database_name = 'fake_simply_stored'
           recreate_db
         end
@@ -110,7 +110,7 @@ class SimplyStoredTest < Test::Unit::TestCase
       
       context "when querying the all_documents view" do
         setup do
-          Fakecouch::Server.reset
+          RockingChair::Server.reset
           CouchPotato::Config.database_name = 'fake_simply_stored'
           recreate_db
         end
@@ -150,7 +150,7 @@ class SimplyStoredTest < Test::Unit::TestCase
         
         context "with deleted" do
           setup do
-            Fakecouch::Server.reset
+            RockingChair::Server.reset
             CouchPotato::Config.database_name = 'fake_simply_stored'
             recreate_db
           end

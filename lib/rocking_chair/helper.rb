@@ -1,4 +1,4 @@
-module Fakecouch
+module RockingChair
   module Helper
     
     def self.jsonfy_options(options, *keys)

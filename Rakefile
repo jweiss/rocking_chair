@@ -12,10 +12,10 @@ end
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |s|
-    s.name = "fakecouch"
+    s.name = "rocking_chair"
     s.summary = %Q{In-memory CouchDB for Couchrest and SimplyStored}
-    s.email = "info@peritor.com"
-    s.homepage = "http://github.com/jweiss/fakecouch"
+    s.email = "jw@innerewut.de"
+    s.homepage = "http://github.com/jweiss/rocking_chair"
     s.description = "In-memory CouchDB for Couchrest and SimplyStored. Works for database and document API, by_attribute views, and for SimplyStored generated views"
     s.authors = ["Jonathan Weiss"]
     s.files = FileList["[A-Z]*.*", "{lib}/**/*"]

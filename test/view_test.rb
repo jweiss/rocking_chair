@@ -3,12 +3,12 @@ require File.dirname(__FILE__) + "/test_helper"
 class ViewTest < Test::Unit::TestCase
   context "A database view" do
     setup do
-      @db = Fakecouch::Database.new
+      @db = RockingChair::Database.new
     end
     
     should "need a database, a design doc, and a view name" do
       assert_error_code 404 do
-        Fakecouch::View.new(@db, 'user', 'by_firstname', {})
+        RockingChair::View.new(@db, 'user', 'by_firstname', {})
       end
       
       @db['_design/user'] = { 'language' => 'javascript', 'views' => {
@@ -21,7 +21,7 @@ class ViewTest < Test::Unit::TestCase
       @db.stubs(:rev).returns('the-rev')
       
       assert_nothing_raised do
-        Fakecouch::View.new(@db, 'user', 'by_firstname', {})
+        RockingChair::View.new(@db, 'user', 'by_firstname', {})
       end
     end
     

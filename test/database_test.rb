@@ -3,21 +3,21 @@ require File.dirname(__FILE__) + "/test_helper"
 class DatabaseTest < Test::Unit::TestCase
   context "The database engine" do
     setup do
-      @db = Fakecouch::Database.new
+      @db = RockingChair::Database.new
     end
     
     context "when asking for a UUID" do
       should "return a uuid" do
-        assert_not_nil Fakecouch::Database.uuid
+        assert_not_nil RockingChair::Database.uuid
       end
       
       should "always return a fresh one" do
-        first_id = Fakecouch::Database.uuid
-        assert_not_equal first_id, Fakecouch::Database.uuid
+        first_id = RockingChair::Database.uuid
+        assert_not_equal first_id, RockingChair::Database.uuid
       end
       
       should "return a list of UUIDs" do
-        assert_equal 3, Fakecouch::Database.uuids(3).uniq.size
+        assert_equal 3, RockingChair::Database.uuids(3).uniq.size
       end
     end
     
@@ -30,7 +30,7 @@ class DatabaseTest < Test::Unit::TestCase
       
       should "assing an ID is none given" do
         @db.stubs(:rev).returns('rev')
-        Fakecouch::Database.expects(:uuid).returns('uuid')
+        RockingChair::Database.expects(:uuid).returns('uuid')
         assert_equal( {"rev" => "rev", "id" => "uuid", "ok" => true}, JSON.parse(@db.store(nil, {'a' => 'b'}.to_json)))
       end
       
@@ -349,7 +349,7 @@ class DatabaseTest < Test::Unit::TestCase
       end
       
       should "insert all documents" do
-        Fakecouch::Database.stubs(:uuid).returns('foo-id')
+        RockingChair::Database.stubs(:uuid).returns('foo-id')
         assert_equal 0, @db.document_count
         docs = {'docs' => [{"_id" => 'a', "value" => 1}, {"_id" => 'b', 'value' => 2}, {'value' => 3}]}.to_json
         assert_equal([

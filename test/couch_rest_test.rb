@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + "/test_helper"
 class CouchRestTest < Test::Unit::TestCase
   context "The HTTP Apdapter for CouchRest" do
     setup do
-      Fakecouch::Server.reset
+      RockingChair::Server.reset
       @couch = CouchRest.new("http://127.0.0.1:5984")
     end
     
@@ -46,15 +46,15 @@ class CouchRestTest < Test::Unit::TestCase
     
     context "when asking for UUIDs" do      
       should "return a UUID" do
-        Fakecouch::Database.expects(:uuids).with('2').returns(['1', '2'])
+        RockingChair::Database.expects(:uuids).with('2').returns(['1', '2'])
         assert_equal '2', @couch.next_uuid(2)
       end
     end
     
     context "Bulk Document API" do
       setup do
-        @db = @couch.create_db('fakecouch')
-        Fakecouch::Database.any_instance.stubs(:rev).returns('the-revision')
+        @db = @couch.create_db('RockingChair')
+        RockingChair::Database.any_instance.stubs(:rev).returns('the-revision')
       end
       
       context "loading all documents" do
@@ -130,7 +130,7 @@ class CouchRestTest < Test::Unit::TestCase
       context "bulk modifications" do
         
         should "accept bulk inserts/updates" do
-          Fakecouch::Database.stubs(:uuid).returns('foo-id')
+          RockingChair::Database.stubs(:uuid).returns('foo-id')
           
           docs = [{"_id" => 'a', "value" => 1}, {"_id" => 'b', 'value' => 2}, {'value' => 3}]
           assert_equal([
@@ -177,8 +177,8 @@ class CouchRestTest < Test::Unit::TestCase
     
     context "Document API" do
       setup do
-        @db = @couch.create_db('fakecouch')
-        Fakecouch::Database.any_instance.stubs(:rev).returns('the-revision')
+        @db = @couch.create_db('RockingChair')
+        RockingChair::Database.any_instance.stubs(:rev).returns('the-revision')
       end
 
       context "when retrieving a document (GET)" do
@@ -225,8 +225,8 @@ class CouchRestTest < Test::Unit::TestCase
         
         should "update a document" do
           seq = sequence('revision')
-          Fakecouch::Database.any_instance.expects(:rev).returns('first-rev').in_sequence(seq)
-          Fakecouch::Database.any_instance.expects(:rev).returns('second-rev').in_sequence(seq)
+          RockingChair::Database.any_instance.expects(:rev).returns('first-rev').in_sequence(seq)
+          RockingChair::Database.any_instance.expects(:rev).returns('second-rev').in_sequence(seq)
           
           @db.save_doc({'_id' => 'new-item', 'content' => 'here'})
           @db.save_doc({'_id' => 'new-item', 'content' => 'better', '_rev' => 'first-rev'})
@@ -254,17 +254,17 @@ class CouchRestTest < Test::Unit::TestCase
       
       context "when storing a document (POST)" do
         should "store a new the document" do
-          Fakecouch::Database.expects(:uuid).returns('5')
+          RockingChair::Database.expects(:uuid).returns('5')
           assert_equal 0, @db.info['doc_count']
           assert_equal({"rev"=>"the-revision", "id"=>"5", "ok"=>true}, 
-                       CouchRest.post('127.0.0.1:5984/fakecouch/', {'content' => 'here'}))
+                       CouchRest.post('127.0.0.1:5984/RockingChair/', {'content' => 'here'}))
           assert_equal 1, @db.info['doc_count']
         end
       end
       
       context "when deleting a document (DELETE)" do
         should "delete if the rev matches" do
-          Fakecouch::Database.any_instance.stubs(:rev).returns('123')
+          RockingChair::Database.any_instance.stubs(:rev).returns('123')
           
           @db.save_doc({'a' => 'b', '_id' => 'delete_me'})
           @db.delete_doc({'a' => 'b', '_id' => 'delete_me', '_rev' => '123'})
@@ -286,7 +286,7 @@ class CouchRestTest < Test::Unit::TestCase
       
       context "when copying a document (COPY)" do
         setup do
-          Fakecouch::Database.any_instance.stubs(:rev).returns('123')
+          RockingChair::Database.any_instance.stubs(:rev).returns('123')
           @db.save_doc({'a' => 'b', '_id' => 'original'})
         end
         
@@ -299,8 +299,8 @@ class CouchRestTest < Test::Unit::TestCase
         
           should "copy with overwrite with revision" do
             seq = sequence('revision')
-            Fakecouch::Database.any_instance.expects(:rev).returns('first-rev').in_sequence(seq)
-            Fakecouch::Database.any_instance.expects(:rev).returns('second-rev').in_sequence(seq)
+            RockingChair::Database.any_instance.expects(:rev).returns('first-rev').in_sequence(seq)
+            RockingChair::Database.any_instance.expects(:rev).returns('second-rev').in_sequence(seq)
           
             @db.save_doc({'1' => '2', '_id' => 'destination'})
           
@@ -326,8 +326,8 @@ class CouchRestTest < Test::Unit::TestCase
           
           should "copy with overwrite with revision" do
             seq = sequence('revision')
-            Fakecouch::Database.any_instance.expects(:rev).returns('first-rev').in_sequence(seq)
-            Fakecouch::Database.any_instance.expects(:rev).returns('second-rev').in_sequence(seq)
+            RockingChair::Database.any_instance.expects(:rev).returns('first-rev').in_sequence(seq)
+            RockingChair::Database.any_instance.expects(:rev).returns('second-rev').in_sequence(seq)
           
             @db.save_doc({'1' => '2', '_id' => 'destination'})
           
