@@ -3,21 +3,26 @@ module Fakecouch
     
     attr_accessor :database, :keys, :options, :ruby_store, :design_document, :design_document_name, :view_name, :view_document
     
-    def self.run(database, design_doc_name, view_name, options = {})
-      new(database, design_doc_name, view_name, options).filter.render
+    def self.run(database, design_document_name, view_name, options = {})
+      raise ArgumentError, "Need a databae, a design_doc_name and a view_name" unless database.present? && design_document_name.present? && view_name.present?
+      new(database, design_document_name, view_name, options).filter.render
+    end
+    
+    def self.run_all(database, options = {})
+      new(database, :all, :all, options).filter.render_for_all
     end
         
     def initialize(database, design_document_name, view_name, options = {})
-      raise ArgumentError, "Need a databae, a design_doc_name and a view_name" unless database.present? && design_document_name.present? && view_name.present?
-      
-      Fakecouch::Error.raise_404 unless database.exists?("_design/#{design_document_name}")
+      unless design_document_name == :all && view_name == :all
+        Fakecouch::Error.raise_404 unless database.exists?("_design/#{design_document_name}")
+        @design_document = JSON.parse(database.storage["_design/#{design_document_name}"])
+        @view_document = design_document['views'][view_name] || Fakecouch::Error.raise_404
+      end
       
       @database = database
       @keys = database.storage.keys
-      @design_document = JSON.parse(database.storage["_design/#{design_document_name}"])
       @design_document_name = design_document_name
       @view_name = view_name
-      @view_document = design_document['views'][view_name] || Fakecouch::Error.raise_404
       initialize_ruby_store
       
       @options = {
@@ -39,8 +44,10 @@ module Fakecouch
     end
     
     def filter
-      if match = view_name.match(/\Aall_documents\Z/)
+      if view_name == :all
         find_all
+      elsif match = view_name.match(/\Aall_documents\Z/)
+        find_all_by_class
       elsif match = view_name.match(/\Aby_(\w+)\Z/)
         find_by_attribute(match[1])
       elsif match = view_name.match(/\Aassociation_#{design_document_name}_belongs_to_(\w+)\Z/)
@@ -72,9 +79,30 @@ module Fakecouch
       end
     end
     
+    def render_for_all
+      offset = filter_by_startkey
+      filter_by_endkey
+      filter_by_limit
+      
+      rows = keys.map do |key|
+        document = ruby_store[key]
+        if options['include_docs'].to_s == 'true'
+          {'id' => document['_id'], 'key' => document['_id'], 'value' => document.update('rev' => document['_rev'])}
+        else
+          {'id' => document['_id'], 'key' => document['_id'], 'value' => {'rev' => document['_rev']}}
+        end
+      end
+      
+      { "total_rows" => database.document_count, "offset" => offset, "rows" => rows}.to_json
+    end
+    
   protected
   
     def find_all
+      sort_by_attribute('_id')
+    end
+  
+    def find_all_by_class
       filter_items_without_correct_ruby_class
       filter_deleted_items if options['without_deleted'].to_s == 'true'
     end
@@ -95,6 +123,8 @@ module Fakecouch
     end
   
     def normalize_view_name
+      return if view_name.is_a?(Symbol)
+      
       if view_name.match(/_withoutdeleted\Z/) || view_name.match(/_without_deleted\Z/)
         options['without_deleted'] = true
       elsif view_name.match(/_withdeleted\Z/) || view_name.match(/_with_deleted\Z/)
@@ -137,7 +167,11 @@ module Fakecouch
     def filter_items_not_in_range(attribute, start_key, end_key)
       @keys = keys.select do |key| 
         document = ruby_store[key]
-        Fakecouch::Helper.access(attribute, document) && (Fakecouch::Helper.access(attribute, document) >= start_key) && (Fakecouch::Helper.access(attribute, document) <= end_key)
+        if end_key
+          Fakecouch::Helper.access(attribute, document) && (Fakecouch::Helper.access(attribute, document) >= start_key) && (Fakecouch::Helper.access(attribute, document) <= end_key)
+        else
+          Fakecouch::Helper.access(attribute, document) && (Fakecouch::Helper.access(attribute, document) >= start_key)
+        end
       end
     end
     
@@ -198,6 +232,39 @@ module Fakecouch
             key <= options['endkey_docid']
           end
         end
+      end
+    end
+    
+    def filter_by_startkey
+      offset = 0
+      if options['startkey']
+        startkey_found = false
+        @keys = keys.map do |key|
+          if startkey_found || key == options['startkey']
+            startkey_found = true
+            key
+          else
+            offset += 1
+            nil
+          end
+        end.compact
+      end
+      return offset
+    end
+    
+    def filter_by_endkey
+      if options['endkey']
+        endkey_found = false
+        @keys = keys.map do |key|
+          if key == options['endkey']
+            endkey_found = true
+            key
+          elsif endkey_found
+            nil
+          else
+            key
+          end
+        end.compact
       end
     end
     

@@ -124,32 +124,7 @@ module Fakecouch
     end
     
     def all_documents(options = {})
-      options = {
-        'descending' => false,
-        'startkey' => nil,
-        'endkey' => nil,
-        'limit' => nil,
-        'include_docs' => false
-      }.update(options)
-      options.assert_valid_keys('descending', 'startkey', 'endkey', 'limit', 'include_docs')
-      Fakecouch::Helper.jsonfy_options(options, 'startkey', 'endkey')
-      
-      keys = (options['descending'].to_s == 'true') ? storage.keys.sort{|x,y| y <=> x } : storage.keys.sort{|x,y| x <=> y }
-      
-      keys, offset = filter_by_startkey(keys, options)
-      keys = filter_by_endkey(keys, options)
-      keys = filter_by_limit(keys, options)
-      
-      rows = keys.map do |key|
-        document = JSON.parse(storage[key])
-        if options['include_docs'].to_s == 'true'
-          {'id' => document['_id'], 'key' => document['_id'], 'value' => document.update('rev' => document['_rev'])}
-        else
-          {'id' => document['_id'], 'key' => document['_id'], 'value' => {'rev' => document['_rev']}}
-        end
-      end
-      
-      { "total_rows" => document_count, "offset" => offset, "rows" => rows}.to_json
+      View.run_all(self, options)
     end
     
     def view(design_doc_name, view_name, options = {})
@@ -195,49 +170,6 @@ module Fakecouch
     def matching_revision?(existing_record, rev)
       document = JSON.parse(existing_record)
       Fakecouch::Helper.access('_rev', document) == rev
-    end
-    
-    def filter_by_startkey(keys, options)
-      offset = 0
-      if options['startkey']
-        options['startkey'] = options['startkey']
-        startkey_found = false
-        keys = keys.map do |key|
-          if startkey_found || key == options['startkey']
-            startkey_found = true
-            key
-          else
-            offset += 1
-            nil
-          end
-        end.compact
-      end
-      return [keys, offset]
-    end
-    
-    def filter_by_endkey(keys, options)
-      if options['endkey']
-        options['endkey'] = options['endkey']
-        endkey_found = false
-        keys = keys.map do |key|
-          if key == options['endkey']
-            endkey_found = true
-            key
-          elsif endkey_found
-            nil
-          else
-            key
-          end
-        end.compact
-      end
-      keys
-    end
-    
-    def filter_by_limit(keys, options)
-      if options['limit']
-        keys = keys[0, options['limit'].to_i]
-      end
-      keys
     end
         
   end

@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + "/test_helper"
 
-class DatabaseTest < Test::Unit::TestCase
+class ViewTest < Test::Unit::TestCase
   context "A database view" do
     setup do
       @db = Fakecouch::Database.new
