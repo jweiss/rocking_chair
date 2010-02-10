@@ -132,6 +132,8 @@ module Fakecouch
         'include_docs' => false
       }.update(options)
       options.assert_valid_keys('descending', 'startkey', 'endkey', 'limit', 'include_docs')
+      Fakecouch::Helper.jsonfy_options(options, 'startkey', 'endkey')
+      
       keys = (options['descending'].to_s == 'true') ? storage.keys.sort{|x,y| y <=> x } : storage.keys.sort{|x,y| x <=> y }
       
       keys, offset = filter_by_startkey(keys, options)
@@ -192,13 +194,13 @@ module Fakecouch
     
     def matching_revision?(existing_record, rev)
       document = JSON.parse(existing_record)
-      attribute_access('_rev', document) == rev
+      Fakecouch::Helper.access('_rev', document) == rev
     end
     
     def filter_by_startkey(keys, options)
       offset = 0
       if options['startkey']
-        options['startkey'] = options['startkey'].gsub(/\A"/, '').gsub(/"\Z/, '')
+        options['startkey'] = options['startkey']
         startkey_found = false
         keys = keys.map do |key|
           if startkey_found || key == options['startkey']
@@ -215,7 +217,7 @@ module Fakecouch
     
     def filter_by_endkey(keys, options)
       if options['endkey']
-        options['endkey'] = options['endkey'].gsub(/\A"/, '').gsub(/"\Z/, '')
+        options['endkey'] = options['endkey']
         endkey_found = false
         keys = keys.map do |key|
           if key == options['endkey']
@@ -236,10 +238,6 @@ module Fakecouch
         keys = keys[0, options['limit'].to_i]
       end
       keys
-    end
-    
-    def attribute_access(attr_name, doc)
-      doc.respond_to?(:_document) ? doc._document[attr_name] : doc[attr_name]
     end
         
   end

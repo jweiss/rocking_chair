@@ -33,7 +33,7 @@ module Fakecouch
         'startkey_docid' => nil
       }.update(options)
       @options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted', 'endkey', 'startkey', 'endkey_docid', 'startkey_docid')
-      jsonfy_options(@options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
+      Fakecouch::Helper.jsonfy_options(@options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
       
       normalize_view_name
     end
@@ -68,10 +68,10 @@ module Fakecouch
         rows = keys.map do |key|
           document = ruby_store[key]
           if options['include_docs'].to_s == 'true'
-            {'id' => attribute_access('_id', document), 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }.merge(key_description)
+            {'id' => Fakecouch::Helper.access('_id', document), 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }.merge(key_description)
           else
-            {'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil}.merge(key_description)
-            #{'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil}
+            {'id' => Fakecouch::Helper.access('_id', document), 'key' => options['key'], 'value' => nil}.merge(key_description)
+            #{'id' => Fakecouch::Helper.access('_id', document), 'key' => options['key'], 'value' => nil}
           end
         end
         { "total_rows" => total_size, "offset" => offset, "rows" => rows}.to_json
@@ -111,12 +111,6 @@ module Fakecouch
       @view_name = view_name.gsub(/_withoutdeleted\Z/, '').gsub(/_without_deleted\Z/, '').gsub(/_withdeleted\Z/, '').gsub(/_with_deleted\Z/, '')
     end
     
-    def jsonfy_options(options, *keys)
-      keys.each do |key|
-        options[key] = ActiveSupport::JSON.decode(options[key]) if options[key]
-      end
-    end
-    
     def initialize_ruby_store
       @ruby_store = database.storage.dup
       @ruby_store.each{|k,v| ruby_store[k] = JSON.parse(v) }
@@ -149,38 +143,38 @@ module Fakecouch
     def filter_items_not_in_range(attribute, start_key, end_key)
       @keys = keys.select do |key| 
         document = ruby_store[key]
-        attribute_access(attribute, document) && (attribute_access(attribute, document) >= start_key) && (attribute_access(attribute, document) <= end_key)
+        Fakecouch::Helper.access(attribute, document) && (Fakecouch::Helper.access(attribute, document) >= start_key) && (Fakecouch::Helper.access(attribute, document) <= end_key)
       end
     end
     
     def filter_deleted_items
       @keys = keys.delete_if do |key| 
         document = ruby_store[key]
-        attribute_access('deleted_at', document).present?
+        Fakecouch::Helper.access('deleted_at', document).present?
       end
     end
     
     def sort_by_attribute(attribute)
       attribute ||= '_id'
       @keys = (options['descending'].to_s == 'true') ? 
-        keys.sort{|x,y| attribute_access(attribute, ruby_store[y]) <=> attribute_access(attribute, ruby_store[x]) } : 
-        keys.sort{|x,y| attribute_access(attribute, ruby_store[x]) <=> attribute_access(attribute, ruby_store[y]) }
+        keys.sort{|x,y| Fakecouch::Helper.access(attribute, ruby_store[y]) <=> Fakecouch::Helper.access(attribute, ruby_store[x]) } : 
+        keys.sort{|x,y| Fakecouch::Helper.access(attribute, ruby_store[x]) <=> Fakecouch::Helper.access(attribute, ruby_store[y]) }
     end
     
     def filter_items_without_attribute_value(attribute, attr_value)
       if attr_value
         @keys = keys.select do |key| 
           document = ruby_store[key]
-          if attribute_access(attribute, document).is_a?(Array)
-            attribute_access(attribute, document).include?(attr_value)
+          if Fakecouch::Helper.access(attribute, document).is_a?(Array)
+            Fakecouch::Helper.access(attribute, document).include?(attr_value)
           else
-            attribute_access(attribute, document) == attr_value
+            Fakecouch::Helper.access(attribute, document) == attr_value
           end
         end
       else
         @keys = keys.select do |key| 
           document = ruby_store[key]
-          attribute_access(attribute, document).present?
+          Fakecouch::Helper.access(attribute, document).present?
         end
       end
     end
@@ -189,7 +183,7 @@ module Fakecouch
       klass_name = design_document_name.classify
       @keys = keys.select do |key| 
         document = ruby_store[key]
-        attribute_access('ruby_class', document).to_s.classify == klass_name
+        Fakecouch::Helper.access('ruby_class', document).to_s.classify == klass_name
       end
     end
     
@@ -211,10 +205,6 @@ module Fakecouch
           end
         end
       end
-    end
-    
-    def attribute_access(attr_name, doc)
-      doc.respond_to?(:_document) ? doc._document[attr_name] : doc[attr_name]
     end
     
     def foreign_key_id(name)

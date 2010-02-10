@@ -5,6 +5,7 @@ require "cgi"
 require "couchrest"
 
 
+require "fakecouch/helper"
 require "fakecouch/error"
 require "fakecouch/view"
 require "fakecouch/database"
