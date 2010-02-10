@@ -6,6 +6,7 @@ require "couchrest"
 
 
 require "fakecouch/error"
+require "fakecouch/view"
 require "fakecouch/database"
 require "fakecouch/server"
 require "fakecouch/couch_rest_http_adapter"

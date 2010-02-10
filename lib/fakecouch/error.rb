@@ -28,5 +28,17 @@ module Fakecouch
       end
     end
     
+    def self.raise_404
+      raise Fakecouch::Error.new(404, 'not_found', "missing")
+    end
+    
+    def self.raise_409
+      raise Fakecouch::Error.new(409, 'conflict', "Document update conflict.")
+    end
+    
+    def self.raise_500
+      raise Fakecouch::Error.new(500, 'invalid', "the document is invalid.")
+    end
+    
   end
 end

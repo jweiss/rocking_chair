@@ -21,6 +21,10 @@ module Fakecouch
       self.class.uuid
     end
     
+    def exists?(doc_id)
+      storage.has_key?(doc_id)
+    end
+    
     def [](doc_id)
       if exists?(doc_id)
         return storage[doc_id]
@@ -147,231 +151,62 @@ module Fakecouch
     end
     
     def view(design_doc_name, view_name, options = {})
-      raise ArgumentError, "Need design_doc_name and view_name" unless design_doc_name.present? && view_name.present?
-      raise_404 unless self.storage["_design/#{design_doc_name}"]
-      design_doc = JSON.parse(self.storage["_design/#{design_doc_name}"])
-      view_doc = design_doc['views'][view_name] || raise_404
-      
-      options = {
-        'reduce' => false,
-        'limit' => nil,
-        'key' => nil,
-        'descending' => false,
-        'include_docs' => false,
-        'without_deleted' => false,
-        'endkey' => nil,
-        'startkey' => nil,
-        'endkey_docid' => nil,
-        'startkey_docid' => nil
-      }.update(options)
-      options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted', 'endkey', 'startkey', 'endkey_docid', 'startkey_docid')
-      jsonfy_options(options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
-
-      if view_name.match(/_withoutdeleted\Z/) || view_name.match(/_without_deleted\Z/)
-        options['without_deleted'] = true
-      elsif view_name.match(/_withdeleted\Z/) || view_name.match(/_with_deleted\Z/)
-        options['without_deleted'] = false
-      else
-        options['without_deleted'] = view_doc['map'].match(/\"soft\" deleted/) ? true : nil
-      end
-      view_name = view_name.gsub(/_withoutdeleted\Z/, '').gsub(/_without_deleted\Z/, '').gsub(/_withdeleted\Z/, '').gsub(/_with_deleted\Z/, '')
-
-      if match = view_name.match(/\Aall_documents\Z/)
-        find_all(design_doc_name, options)
-      elsif match = view_name.match(/\Aby_(\w+)\Z/)
-        find_by_attribute(match[1], design_doc_name, options)
-      elsif match = view_name.match(/\Aassociation_#{design_doc_name}_belongs_to_(\w+)\Z/)
-        find_belongs_to(match[1], design_doc_name, options)
-      else
-        raise "Unknown View implementation for view #{view_name.inspect} in design document _design/#{design_doc_name}"
-      end
+      View.run(self, design_doc_name, view_name, options)
     end
+    
+    # def _view(design_doc_name, view_name, options = {})
+    #   raise ArgumentError, "Need design_doc_name and view_name" unless design_doc_name.present? && view_name.present?
+    #   raise_404 unless self.storage["_design/#{design_doc_name}"]
+    #   design_doc = JSON.parse(self.storage["_design/#{design_doc_name}"])
+    #   view_doc = design_doc['views'][view_name] || raise_404
+    #   
+    #   options = {
+    #     'reduce' => false,
+    #     'limit' => nil,
+    #     'key' => nil,
+    #     'descending' => false,
+    #     'include_docs' => false,
+    #     'without_deleted' => false,
+    #     'endkey' => nil,
+    #     'startkey' => nil,
+    #     'endkey_docid' => nil,
+    #     'startkey_docid' => nil
+    #   }.update(options)
+    #   options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted', 'endkey', 'startkey', 'endkey_docid', 'startkey_docid')
+    #   jsonfy_options(options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
+    # 
+    #   if view_name.match(/_withoutdeleted\Z/) || view_name.match(/_without_deleted\Z/)
+    #     options['without_deleted'] = true
+    #   elsif view_name.match(/_withdeleted\Z/) || view_name.match(/_with_deleted\Z/)
+    #     options['without_deleted'] = false
+    #   else
+    #     options['without_deleted'] = view_doc['map'].match(/\"soft\" deleted/) ? true : nil
+    #   end
+    #   view_name = view_name.gsub(/_withoutdeleted\Z/, '').gsub(/_without_deleted\Z/, '').gsub(/_withdeleted\Z/, '').gsub(/_with_deleted\Z/, '')
+    # 
+    #   if match = view_name.match(/\Aall_documents\Z/)
+    #     find_all(design_doc_name, options)
+    #   elsif match = view_name.match(/\Aby_(\w+)\Z/)
+    #     find_by_attribute(match[1], design_doc_name, options)
+    #   elsif match = view_name.match(/\Aassociation_#{design_doc_name}_belongs_to_(\w+)\Z/)
+    #     find_belongs_to(match[1], design_doc_name, options)
+    #   else
+    #     raise "Unknown View implementation for view #{view_name.inspect} in design document _design/#{design_doc_name}"
+    #   end
+    # end
 
   protected
   
-    def find_all(design_doc_name, options)
-      ruby_store = copy_storage_to_ruby_hash
-      keys = ruby_store.keys
-      keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
-      keys = filter_deleted_items(keys, ruby_store) if options['without_deleted'].to_s == 'true'
-      
-      view_json(keys, ruby_store, options)
-    end
-  
-    def find_belongs_to(belongs_to, design_doc_name, options)      
-      ruby_store = copy_storage_to_ruby_hash
-      keys = ruby_store.keys
-      
-      keys = filter_items_by_key(keys, [foreign_key_id(belongs_to)], ruby_store, options)
-      keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
-      keys = filter_deleted_items(keys, ruby_store) if options['without_deleted'].to_s == 'true'
-
-      view_json(keys, ruby_store, options)
-    end
-  
-    def find_by_attribute(attribute_string, design_doc_name, options)
-      attributes = attribute_string.split("_and_")
-
-      ruby_store = copy_storage_to_ruby_hash
-      keys = ruby_store.keys
-      
-      keys = filter_items_by_key(keys, attributes, ruby_store, options)
-      keys = filter_items_without_correct_ruby_class(keys, ruby_store, design_doc_name)
-      keys = filter_deleted_items(keys, ruby_store) if options['without_deleted'].to_s == 'true'
-      keys = sort_by_attribute(keys, ruby_store, attributes.first, options)
-      
-      view_json(keys, ruby_store, options)
-    end
-    
-    def filter_items_by_key(keys, attributes, collection, options)
-      if options['startkey']
-        keys = filter_items_by_range(keys, attributes, collection, options)
-      else
-        keys = filter_items_by_exact_key(keys, attributes, collection, options)
-      end
-    end
-    
-    def filter_items_by_exact_key(keys, attributes, collection, options)
-      filter_keys = options['key'].is_a?(Array) ? options['key'] : [options['key']]
-      attributes.each_with_index do |attribute, index|
-        keys = filter_items_without_attribute_value(keys, collection, attribute, filter_keys[index])
-      end
-      keys
-    end
-    
-    def filter_items_by_range(keys, attributes, collection, options)
-      start_keys = options['startkey'].is_a?(Array) ? options['startkey'] : [options['startkey']]
-      end_keys = options['endkey'].is_a?(Array) ? options['endkey'] : [options['endkey']]
-      
-      attributes.each_with_index do |attribute, index|
-        keys = filter_items_not_in_range(keys, collection, attribute, start_keys[index], end_keys[index])
-      end
-      keys
-    end
-    
-    def filter_items_not_in_range(keys, collection, attribute, start_key, end_key)
-      keys = keys.select do |key| 
-        document = collection[key]
-        attribute_access(attribute, document) && (attribute_access(attribute, document) >= start_key) && (attribute_access(attribute, document) <= end_key)
-      end
-    end
-    
-    def filter_deleted_items(keys, collection)
-      keys = keys.delete_if do |key| 
-        document = collection[key]
-        attribute_access('deleted_at', document).present?
-      end
-    end
-    
-    def sort_by_attribute(keys, collection, attribute, options)
-      attribute ||= '_id'
-      keys = (options['descending'].to_s == 'true') ? 
-        keys.sort{|x,y| attribute_access(attribute, collection[y]) <=> attribute_access(attribute, collection[x]) } : 
-        keys.sort{|x,y| attribute_access(attribute, collection[x]) <=> attribute_access(attribute, collection[y]) }
-    end
-    
-    def attribute_access(attr_name, doc)
-      doc.respond_to?(:_document) ? doc._document[attr_name] : doc[attr_name]
-    end
-    
-    def filter_items_without_attribute_value(keys, collection, attribute, attr_value)
-      if attr_value
-        keys = keys.select do |key| 
-          document = collection[key]
-          if attribute_access(attribute, document).is_a?(Array)
-            attribute_access(attribute, document).include?(attr_value)
-          else
-            attribute_access(attribute, document) == attr_value
-          end
-        end
-      else
-        keys = keys.select do |key| 
-          document = collection[key]
-          attribute_access(attribute, document).present?
-        end
-      end
-    end
-    
-    def filter_items_without_correct_ruby_class(keys, collection, klass_name)
-      klass_name = klass_name.classify
-      keys = keys.select do |key| 
-        document = collection[key]
-        attribute_access('ruby_class', document).to_s.classify == klass_name
-      end
-    end
-  
-    def filter_by_limit(keys, options)
-      if options['limit']
-        keys = keys[0, options['limit'].to_i]
-      end
-      keys
-    end
-  
-    def filter_by_endkey(keys, options)
-      if options['endkey']
-        options['endkey'] = options['endkey'].gsub(/\A"/, '').gsub(/"\Z/, '')
-        endkey_found = false
-        keys = keys.map do |key|
-          if key == options['endkey']
-            endkey_found = true
-            key
-          elsif endkey_found
-            nil
-          else
-            key
-          end
-        end.compact
-      end
-      keys
-    end
-    
-    def filter_by_startkey_docid_and_endkey_docid(keys, collection, options)
-      if options['startkey_docid'] || options['endkey_docid']
-        keys = keys.select do |key|
-          if options['startkey_docid'] && options['endkey_docid']
-            ( key >= options['startkey_docid']) && (key <= options['endkey_docid'])
-          elsif options['startkey_docid']
-            key >= options['startkey_docid']
-          else
-            key <= options['endkey_docid']
-          end
-        end
-      end
-      keys
-    end
-  
-    def filter_by_startkey(keys, options)
-      offset = 0
-      if options['startkey']
-        options['startkey'] = options['startkey'].gsub(/\A"/, '').gsub(/"\Z/, '')
-        startkey_found = false
-        keys = keys.map do |key|
-          if startkey_found || key == options['startkey']
-            startkey_found = true
-            key
-          else
-            offset += 1
-            nil
-          end
-        end.compact
-      end
-      return [keys, offset]
-    end
-  
-    def exists?(doc_id)
-      storage.has_key?(doc_id)
-    end
-  
     def raise_404
-      raise Fakecouch::Error.new(404, 'not_found', "missing")
+      Fakecouch::Error.raise_404
     end
     
     def raise_409
-      raise Fakecouch::Error.new(409, 'conflict', "Document update conflict.")
+      Fakecouch::Error.raise_409
     end
     
     def raise_500
-      raise Fakecouch::Error.new(500, 'invalid', "the document is invalid.")
+      Fakecouch::Error.raise_500
     end
   
     def state_tuple(_id, _rev)
@@ -413,20 +248,51 @@ module Fakecouch
       attribute_access('_rev', document) == rev
     end
     
-    def copy_storage_to_ruby_hash
-      ruby_store = storage.dup
-      ruby_store.each{|k,v| ruby_store[k] = JSON.parse(v) }
-      ruby_store
-    end
-    
-    def foreign_key_id(name)
-      name.underscore.gsub('/','__').gsub('::','__') + "_id"
-    end
-    
-    def jsonfy_options(options, *keys)
-      keys.each do |key|
-        options[key] = ActiveSupport::JSON.decode(options[key]) if options[key]
+    def filter_by_startkey(keys, options)
+      offset = 0
+      if options['startkey']
+        options['startkey'] = options['startkey'].gsub(/\A"/, '').gsub(/"\Z/, '')
+        startkey_found = false
+        keys = keys.map do |key|
+          if startkey_found || key == options['startkey']
+            startkey_found = true
+            key
+          else
+            offset += 1
+            nil
+          end
+        end.compact
       end
+      return [keys, offset]
+    end
+    
+    def filter_by_endkey(keys, options)
+      if options['endkey']
+        options['endkey'] = options['endkey'].gsub(/\A"/, '').gsub(/"\Z/, '')
+        endkey_found = false
+        keys = keys.map do |key|
+          if key == options['endkey']
+            endkey_found = true
+            key
+          elsif endkey_found
+            nil
+          else
+            key
+          end
+        end.compact
+      end
+      keys
+    end
+    
+    def filter_by_limit(keys, options)
+      if options['limit']
+        keys = keys[0, options['limit'].to_i]
+      end
+      keys
+    end
+    
+    def attribute_access(attr_name, doc)
+      doc.respond_to?(:_document) ? doc._document[attr_name] : doc[attr_name]
     end
     
     def view_json(keys, collection, options)
