@@ -57,11 +57,6 @@ module Fakecouch
       filter_by_startkey_docid_and_endkey_docid
       filter_by_limit
       
-      key_description = {'key' => options['key']}
-      key_description = {'startkey' => options['startkey'], 'endkey' => options['endkey']} if options['startkey']
-      key_description.update('startkey_docid' => options['startkey_docid']) if options['startkey_docid']
-      key_description.update('endkey_docid' => options['endkey_docid']) if options['endkey_docid']
-      
       if options['reduce'].to_s == 'true'
         { "rows" => [{'key' => options['key'], 'value' => keys.size }]}.to_json
       else
@@ -71,7 +66,6 @@ module Fakecouch
             {'id' => Fakecouch::Helper.access('_id', document), 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }.merge(key_description)
           else
             {'id' => Fakecouch::Helper.access('_id', document), 'key' => options['key'], 'value' => nil}.merge(key_description)
-            #{'id' => Fakecouch::Helper.access('_id', document), 'key' => options['key'], 'value' => nil}
           end
         end
         { "total_rows" => total_size, "offset" => offset, "rows" => rows}.to_json
@@ -209,6 +203,14 @@ module Fakecouch
     
     def foreign_key_id(name)
       name.underscore.gsub('/','__').gsub('::','__') + "_id"
+    end
+    
+    def key_description
+      description = {'key' => options['key']}
+      description = {'startkey' => options['startkey'], 'endkey' => options['endkey']} if options['startkey']
+      description.update('startkey_docid' => options['startkey_docid']) if options['startkey_docid']
+      description.update('endkey_docid' => options['endkey_docid']) if options['endkey_docid']
+      description
     end
     
   end
