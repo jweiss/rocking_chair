@@ -3,7 +3,8 @@ require File.dirname(__FILE__) + "/../lib/rocking_chair"
 require 'test/unit'
 require 'shoulda'
 require 'mocha'
-require 'active_support'
+require 'json/ext'
+require 'active_support/inflector'
 
 require File.dirname(__FILE__) + "/fixtures/extended_couch_rest_fixtures"
 require File.dirname(__FILE__) + "/fixtures/simply_stored_fixtures"

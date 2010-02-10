@@ -14,7 +14,7 @@ class ViewTest < Test::Unit::TestCase
       @db['_design/user'] = { 'language' => 'javascript', 'views' => {
         'by_firstname' => {
           'reduce' => "function(key, values){ return values.length }",
-          "map" => "function(doc) {\n if(doc.ruby_class && doc.ruby_class == 'Instance') {\n emit(doc['created_at'], null);\n }\n }"
+          "map" => "function(doc) { if(doc.ruby_class && doc.ruby_class == 'Instance') { emit(doc['created_at'], null); } }"
         }
       }}.to_json
       
@@ -29,7 +29,7 @@ class ViewTest < Test::Unit::TestCase
       @db['_design/user'] = { 'language' => 'javascript', 'views' => {
         'by_firstname' => {
           'reduce' => "function(key, values){ return values.length }",
-          "map" => "function(doc) {\n if(doc.ruby_class && doc.ruby_class == 'Instance') {\n emit(doc['created_at'], null);\n }\n }"
+          "map" => "function(doc) { if(doc.ruby_class && doc.ruby_class == 'Instance') { emit(doc['created_at'], null); } }"
         }
       }}.to_json
       

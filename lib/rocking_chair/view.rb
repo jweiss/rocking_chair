@@ -15,7 +15,7 @@ module RockingChair
     def initialize(database, design_document_name, view_name, options = {})
       unless design_document_name == :all && view_name == :all
         RockingChair::Error.raise_404 unless database.exists?("_design/#{design_document_name}")
-        @design_document = JSON.parse(database.storage["_design/#{design_document_name}"])
+        @design_document = JSON.parse(database.storage["_design/#{design_document_name}"], :create_additions => false)
         @view_document = design_document['views'][view_name] || RockingChair::Error.raise_404
       end
       
@@ -137,7 +137,7 @@ module RockingChair
     
     def initialize_ruby_store
       @ruby_store = database.storage.dup
-      @ruby_store.each{|k,v| ruby_store[k] = JSON.parse(v) }
+      @ruby_store.each{|doc_id, json_document| ruby_store[doc_id] = JSON.parse(json_document, :create_additions => false) }
     end
     
     def filter_items_by_key(attributes)
