@@ -5,11 +5,11 @@ module Fakecouch
     
     def self.run(database, design_document_name, view_name, options = {})
       raise ArgumentError, "Need a databae, a design_doc_name and a view_name" unless database.present? && design_document_name.present? && view_name.present?
-      new(database, design_document_name, view_name, options).filter.render
+      new(database, design_document_name, view_name, options).find.render
     end
     
     def self.run_all(database, options = {})
-      new(database, :all, :all, options).filter.render_for_all
+      new(database, :all, :all, options).find.render_for_all
     end
         
     def initialize(database, design_document_name, view_name, options = {})
@@ -43,7 +43,7 @@ module Fakecouch
       normalize_view_name
     end
     
-    def filter
+    def find
       if view_name == :all
         find_all
       elsif match = view_name.match(/\Aall_documents\Z/)
