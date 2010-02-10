@@ -29,7 +29,7 @@ module Fakecouch
       if exists?(doc_id)
         return storage[doc_id]
       else
-        raise_404
+        Fakecouch::Error.raise_404
       end
     end
     
@@ -42,7 +42,7 @@ module Fakecouch
       
       document = self[doc_id]
       if options['rev'] && ( ActiveSupport::JSON.decode(document)['_rev'] != options['rev']) 
-        raise_404
+        Fakecouch::Error.raise_404
       end
       if options['revs'] && options['revs'] == 'true'
         json =  ActiveSupport::JSON.decode(document)
@@ -82,10 +82,10 @@ module Fakecouch
         if matching_revision?(existing, rev)
           storage.delete(doc_id)
         else
-          raise_409
+          Fakecouch::Error.raise_409
         end
       else
-        raise_404(doc_id)
+        Fakecouch::Error.raise_404
       end
     end
     
@@ -154,60 +154,7 @@ module Fakecouch
       View.run(self, design_doc_name, view_name, options)
     end
     
-    # def _view(design_doc_name, view_name, options = {})
-    #   raise ArgumentError, "Need design_doc_name and view_name" unless design_doc_name.present? && view_name.present?
-    #   raise_404 unless self.storage["_design/#{design_doc_name}"]
-    #   design_doc = JSON.parse(self.storage["_design/#{design_doc_name}"])
-    #   view_doc = design_doc['views'][view_name] || raise_404
-    #   
-    #   options = {
-    #     'reduce' => false,
-    #     'limit' => nil,
-    #     'key' => nil,
-    #     'descending' => false,
-    #     'include_docs' => false,
-    #     'without_deleted' => false,
-    #     'endkey' => nil,
-    #     'startkey' => nil,
-    #     'endkey_docid' => nil,
-    #     'startkey_docid' => nil
-    #   }.update(options)
-    #   options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted', 'endkey', 'startkey', 'endkey_docid', 'startkey_docid')
-    #   jsonfy_options(options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
-    # 
-    #   if view_name.match(/_withoutdeleted\Z/) || view_name.match(/_without_deleted\Z/)
-    #     options['without_deleted'] = true
-    #   elsif view_name.match(/_withdeleted\Z/) || view_name.match(/_with_deleted\Z/)
-    #     options['without_deleted'] = false
-    #   else
-    #     options['without_deleted'] = view_doc['map'].match(/\"soft\" deleted/) ? true : nil
-    #   end
-    #   view_name = view_name.gsub(/_withoutdeleted\Z/, '').gsub(/_without_deleted\Z/, '').gsub(/_withdeleted\Z/, '').gsub(/_with_deleted\Z/, '')
-    # 
-    #   if match = view_name.match(/\Aall_documents\Z/)
-    #     find_all(design_doc_name, options)
-    #   elsif match = view_name.match(/\Aby_(\w+)\Z/)
-    #     find_by_attribute(match[1], design_doc_name, options)
-    #   elsif match = view_name.match(/\Aassociation_#{design_doc_name}_belongs_to_(\w+)\Z/)
-    #     find_belongs_to(match[1], design_doc_name, options)
-    #   else
-    #     raise "Unknown View implementation for view #{view_name.inspect} in design document _design/#{design_doc_name}"
-    #   end
-    # end
-
   protected
-  
-    def raise_404
-      Fakecouch::Error.raise_404
-    end
-    
-    def raise_409
-      Fakecouch::Error.raise_409
-    end
-    
-    def raise_500
-      Fakecouch::Error.raise_500
-    end
   
     def state_tuple(_id, _rev)
       {"ok" => true, "id" =>  _id, "rev" => _rev }.to_json
@@ -218,7 +165,7 @@ module Fakecouch
       if matching_revision?(existing, json['_rev'])
         insert(doc_id, json)
       else
-        raise_409
+        Fakecouch::Error.raise_409
       end
     end
   
@@ -235,7 +182,7 @@ module Fakecouch
     
     def validate_document(doc)
       if design_doc?(doc)
-        raise_500 unless doc['views'].is_a?(Hash)
+        Fakecouch::Error.raise_500 unless doc['views'].is_a?(Hash)
       end
     end
     
@@ -294,33 +241,6 @@ module Fakecouch
     def attribute_access(attr_name, doc)
       doc.respond_to?(:_document) ? doc._document[attr_name] : doc[attr_name]
     end
-    
-    def view_json(keys, collection, options)
-      offset = 0
-      total_size = keys.size
-      keys = filter_by_startkey_docid_and_endkey_docid(keys, collection, options)
-      keys = keys[0, options['limit'].to_i] if options['limit']
-      
-      key_description = {'key' => options['key']}
-      key_description = {'startkey' => options['startkey'], 'endkey' => options['endkey']} if options['startkey']
-      key_description.update('startkey_docid' => options['startkey_docid']) if options['startkey_docid']
-      key_description.update('endkey_docid' => options['endkey_docid']) if options['endkey_docid']
-      
-      if options['reduce'].to_s == 'true'
-        { "rows" => [{'key' => options['key'], 'value' => keys.size }]}.to_json
-      else
-        rows = keys.map do |key|
-          document = collection[key]
-          if options['include_docs'].to_s == 'true'
-            {'id' => attribute_access('_id', document), 'value' => nil, 'doc' => (document.respond_to?(:_document) ? document._document : document) }.merge(key_description)
-          else
-            {'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil}.merge(key_description)
-            #{'id' => attribute_access('_id', document), 'key' => options['key'], 'value' => nil}
-          end
-        end
-        { "total_rows" => total_size, "offset" => offset, "rows" => rows}.to_json
-      end
-    end
-    
+        
   end
 end
