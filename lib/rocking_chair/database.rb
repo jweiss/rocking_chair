@@ -41,16 +41,16 @@ module RockingChair
       options.assert_valid_keys('rev', 'revs', 'revs_info')
       
       document = self[doc_id]
-      if options['rev'] && ( ActiveSupport::JSON.decode(document)['_rev'] != options['rev']) 
+      if options['rev'] && ( JSON.parse(document)['_rev'] != options['rev']) 
         RockingChair::Error.raise_404
       end
       if options['revs'] && options['revs'] == 'true'
-        json =  ActiveSupport::JSON.decode(document)
+        json =  JSON.parse(document)
         json['_revisions'] = {'start' => 1, 'ids' => [json['_rev']]}
         document = json.to_json
       end
       if options['revs_info'] && options['revs_info'] == 'true'
-        json =  ActiveSupport::JSON.decode(document)
+        json =  JSON.parse(document)
         json['_revs_info'] = [{"rev" => json['_rev'], "status" => "disk"}]
         document = json.to_json
       end

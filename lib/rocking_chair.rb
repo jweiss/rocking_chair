@@ -1,5 +1,5 @@
 require "rubygems"
-require "active_support"
+require "active_support/core_ext/hash"
 require "uuidtools"
 require "cgi"
 require "couchrest"
