@@ -46,3 +46,14 @@ Caveats
 
 At the moment the performance is not as good as it could be as there is a lot of serialization to and from JSON going on.
 This will be improved by storing not only the JSON tree but also the Ruby representation of the stored objects.
+
+License
+=============
+
+RockingChair is licensed under the OpenBSD / two-clause BSD license, modeled after the ISC license. See LICENSE.txt
+
+About
+=============
+
+RockingChair was written by [Jonathan Weiss](http://twitter.com/jweiss) to make [Mathias Meyer](http://twitter.com/roidrage) happy.
+
