@@ -106,6 +106,12 @@ class SimplyStoredTest < Test::Unit::TestCase
           assert user.save
           assert_equal [user.id], @project.users.map(&:id)
         end
+        
+        should "support counting associated" do
+          assert_equal 0, @project.user_count
+          user = User.create(:firstname => 'Michael', :project => @project)
+          assert_equal 1, @project.user_count(:force_reload => true)
+        end
       end
       
       context "when querying the all_documents view" do
