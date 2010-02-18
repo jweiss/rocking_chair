@@ -2,10 +2,10 @@ module RockingChair
   module CouchRestHttpAdapter
     URL_PARAMETER = /[a-zA-Z0-9\-\_\%]+/
     
-    @_RockingChair_debug = true
+    @_rocking_chair_debug = true
     
     def get(uri, headers={})
-      puts "GET: #{uri.inspect}: #{headers.inspect}" if @_RockingChair_debug
+      puts "GET: #{uri.inspect}: #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url == ''
         RockingChair::Server.info
@@ -29,7 +29,7 @@ module RockingChair
     end
   
     def post(uri, payload, headers={})
-      puts "POST: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_RockingChair_debug
+      puts "POST: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\/?\Z/)
         RockingChair::Server.store($1, nil, payload, parameters)
@@ -41,7 +41,7 @@ module RockingChair
     end
   
     def put(uri, payload, headers={})
-      puts "PUT: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_RockingChair_debug
+      puts "PUT: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\Z/)
         RockingChair::Server.create_db(url)
@@ -55,19 +55,21 @@ module RockingChair
     end
   
     def delete(uri, headers={})
-      puts "DELETE: #{uri.inspect}: #{headers.inspect}" if @_RockingChair_debug
+      puts "DELETE: #{uri.inspect}: #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\Z/)
         RockingChair::Server.delete_db(url)
       elsif url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
         RockingChair::Server.delete($1, $2, parameters)
+      elsif url.match(/\A(#{URL_PARAMETER})\/_design\/(#{URL_PARAMETER})\Z/)
+        RockingChair::Server.delete($1, "_design/#{$2}", parameters)
       else
         raise "DELETE: Unknown url: #{uri.inspect}: #{headers.inspect}"
       end
     end
   
     def copy(uri, headers)
-      puts "COPY: #{uri.inspect}: #{headers.inspect}" if @_RockingChair_debug
+      puts "COPY: #{uri.inspect}: #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
         RockingChair::Server.copy($1, $2, headers.merge(parameters))

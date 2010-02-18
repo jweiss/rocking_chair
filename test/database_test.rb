@@ -233,7 +233,7 @@ class DatabaseTest < Test::Unit::TestCase
         @db["B"] = {"data" => "Z"}.to_json
         
         assert_equal({
-          "total_rows" => 3, "offset" => 1, "rows" => [
+          "total_rows" => 3, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
             {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
           ]
@@ -247,7 +247,7 @@ class DatabaseTest < Test::Unit::TestCase
         @db["B"] = {"data" => "Z"}.to_json
         
         assert_equal({
-          "total_rows" => 3, "offset" => 1, "rows" => [
+          "total_rows" => 3, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
             {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
           ]
@@ -262,7 +262,7 @@ class DatabaseTest < Test::Unit::TestCase
         @db["D"] = {"data" => "Z"}.to_json
         
         assert_equal({
-          "total_rows" => 4, "offset" => 1, "rows" => [
+          "total_rows" => 4, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
           ]
         }.to_json, @db.all_documents('startkey' => 'B', 'limit' => '1'))
@@ -276,11 +276,11 @@ class DatabaseTest < Test::Unit::TestCase
         @db["D"] = {"data" => "Z"}.to_json
         
         assert_equal({
-          "total_rows" => 4, "offset" => 2, "rows" => [
+          "total_rows" => 4, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
             {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => 'B', 'descending' => 'true'))
+        }.to_json, @db.all_documents('startkey' => "B\u999", 'endkey' => "A", 'descending' => 'true'))
       end
       
       should "combine start, limit, and descending" do
@@ -291,10 +291,10 @@ class DatabaseTest < Test::Unit::TestCase
         @db["D"] = {"data" => "Z"}.to_json
         
         assert_equal({
-          "total_rows" => 4, "offset" => 2, "rows" => [
+          "total_rows" => 4, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => 'B', 'descending' => 'true', 'limit' => '1'))
+        }.to_json, @db.all_documents('startkey' => "B\u999", 'endkey' => "B", 'descending' => 'true', 'limit' => '1'))
       end
       
       should "end by the given key" do
@@ -308,7 +308,7 @@ class DatabaseTest < Test::Unit::TestCase
             {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}},
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('endkey' => 'B'))
+        }.to_json, @db.all_documents('endkey' => 'B', 'startkey' => 'A'))
       end
       
       should "combine start and end key" do
@@ -319,7 +319,7 @@ class DatabaseTest < Test::Unit::TestCase
         @db["D"] = {"data" => "Z"}.to_json
         
         assert_equal({
-          "total_rows" => 4, "offset" => 1, "rows" => [
+          "total_rows" => 4, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
             {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
           ]
@@ -334,7 +334,7 @@ class DatabaseTest < Test::Unit::TestCase
         @db["D"] = {"data" => "Z"}.to_json
         
         assert_equal({
-          "total_rows" => 4, "offset" => 1, "rows" => [
+          "total_rows" => 4, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev", '_rev' => 'rev', 'data' => 'Z', '_id' => 'B'}},
             {"id" => "C", "key" => "C", "value" => {"rev" => "rev", '_rev' => 'rev', 'data' => 'Z', '_id' => 'C'}}
           ]

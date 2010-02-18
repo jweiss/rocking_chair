@@ -105,7 +105,7 @@ class CouchRestTest < Test::Unit::TestCase
           @db.save_doc({'_id' => "A", 'a' => 'b'})
           
           assert_equal({
-            "total_rows" => 3, "offset" => 1, "rows" => [
+            "total_rows" => 3, "offset" => 0, "rows" => [
               {"id" => "B", "key" => "B", "value" => {"rev" => "the-revision"}},
               {"id" => "C", "key" => "C", "value" => {"rev" => "the-revision"}}
             ]
@@ -119,11 +119,11 @@ class CouchRestTest < Test::Unit::TestCase
           @db.save_doc({'_id' => "D", 'a' => 'b'})
           
           assert_equal({
-            "total_rows" => 4, "offset" => 1, "rows" => [
+            "total_rows" => 4, "offset" => 0, "rows" => [
               {"id" => "C", "key" => "C", "value" => {"rev" => "the-revision", '_rev' => 'the-revision', '_id' => 'C', 'a' => 'b'}},
               {"id" => "B", "key" => "B", "value" => {"rev" => "the-revision", '_rev' => 'the-revision', '_id' => 'B', 'a' => 'b'}}
             ]
-          }, @db.documents(:startkey => 'C', :limit => 2, :include_docs => true, :descending => true))
+          }, @db.documents(:startkey => "C\u999", :endkey => "B", :limit => 2, :include_docs => true, :descending => true))
         end
       end
       

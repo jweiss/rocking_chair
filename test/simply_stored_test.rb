@@ -112,6 +112,18 @@ class SimplyStoredTest < Test::Unit::TestCase
           user = User.create(:firstname => 'Michael', :project => @project)
           assert_equal 1, @project.user_count(:force_reload => true)
         end
+        
+        should "support limiting" do
+          3.times{ User.create!(:firstname => 'Michael', :project => @project) }
+          assert_equal 3, @project.users.size
+          assert_equal 2, @project.users(:limit => 2).size
+        end
+        
+        should "support order" do
+          3.times{|i| User.create!(:firstname => "user #{i}", :project => @project) }
+          assert_not_equal @project.users(:order => :asc).map(&:id), @project.users(:order => :desc).map(&:id)
+          assert_equal @project.users(:order => :asc).reverse, @project.users(:order => :desc)
+        end
       end
       
       context "when querying the all_documents view" do
@@ -128,6 +140,12 @@ class SimplyStoredTest < Test::Unit::TestCase
           
           User.create(:firstname => 'Hulk', :project => @project)
           assert_equal ['Peter', 'Michael Mann', 'Hulk'].sort, User.all.map(&:firstname).sort
+        end
+        
+        should "support order" do
+          3.times{|i| User.create!(:firstname => "user #{i}") }
+          assert_not_equal User.all(:order => :asc).map(&:id), User.all(:order => :desc).map(&:id)
+          assert_equal User.all(:order => :asc).reverse, User.all(:order => :desc)
         end
         
         should "load first" do
@@ -214,6 +232,16 @@ class SimplyStoredTest < Test::Unit::TestCase
         end
       end
       
+    end
+    
+    context "when deleting all design docs" do
+      should "reset all design docs" do
+        User.find_all_by_firstname('a')
+        db = "http://127.0.0.1:5984/#{CouchPotato::Config.database_name}"
+        assert_nothing_raised do
+          assert_equal 1, SimplyStored::Couch.delete_all_design_documents(db)
+        end
+      end
     end
      
   end

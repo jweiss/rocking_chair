@@ -41,6 +41,7 @@ module RockingChair
       RockingChair::Helper.jsonfy_options(@options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
       
       normalize_view_name
+      normalize_descending_options
     end
     
     def find
@@ -80,8 +81,12 @@ module RockingChair
     end
     
     def render_for_all
-      offset = filter_by_startkey
-      filter_by_endkey
+      #key_size_before_startkey_filter = keys.size
+      #filter_items_not_in_range('_id', options['startkey'], nil) if options['startkey']
+      #filter_items_not_in_range('_id', options['startkey'], options['endkey']) if options['endkey']
+      offset = 0 #key_size_before_startkey_filter - keys.size
+      #offset = filter_by_startkey
+      #filter_by_endkey
       filter_by_limit
       
       rows = keys.map do |key|
@@ -99,18 +104,21 @@ module RockingChair
   protected
   
     def find_all
+      filter_items_by_key('_id')
       sort_by_attribute('_id')
     end
   
     def find_all_by_class
       filter_items_without_correct_ruby_class
       filter_deleted_items if options['without_deleted'].to_s == 'true'
+      sort_by_attribute('_id')
     end
   
-    def find_belongs_to(belongs_to)      
+    def find_belongs_to(belongs_to)
       filter_items_by_key([foreign_key_id(belongs_to)])
       filter_items_without_correct_ruby_class
       filter_deleted_items if options['without_deleted'].to_s == 'true'
+      sort_by_attribute('_id')
     end
     
     def find_by_attribute(attribute_string)
@@ -143,7 +151,7 @@ module RockingChair
     def filter_items_by_key(attributes)
       if options['startkey']
         filter_items_by_range(attributes)
-      else
+      elsif options['key']
         filter_items_by_exact_key(attributes)
       end
     end
@@ -158,7 +166,6 @@ module RockingChair
     def filter_items_by_range(attributes)
       start_keys = options['startkey'].is_a?(Array) ? options['startkey'] : [options['startkey']]
       end_keys = options['endkey'].is_a?(Array) ? options['endkey'] : [options['endkey']]
-      
       attributes.each_with_index do |attribute, index|
         filter_items_not_in_range(attribute, start_keys[index], end_keys[index])
       end
@@ -234,40 +241,7 @@ module RockingChair
         end
       end
     end
-    
-    def filter_by_startkey
-      offset = 0
-      if options['startkey']
-        startkey_found = false
-        @keys = keys.map do |key|
-          if startkey_found || key == options['startkey']
-            startkey_found = true
-            key
-          else
-            offset += 1
-            nil
-          end
-        end.compact
-      end
-      return offset
-    end
-    
-    def filter_by_endkey
-      if options['endkey']
-        endkey_found = false
-        @keys = keys.map do |key|
-          if key == options['endkey']
-            endkey_found = true
-            key
-          elsif endkey_found
-            nil
-          else
-            key
-          end
-        end.compact
-      end
-    end
-    
+        
     def foreign_key_id(name)
       name.underscore.gsub('/','__').gsub('::','__') + "_id"
     end
@@ -278,6 +252,12 @@ module RockingChair
       description.update('startkey_docid' => options['startkey_docid']) if options['startkey_docid']
       description.update('endkey_docid' => options['endkey_docid']) if options['endkey_docid']
       description
+    end
+    
+    def normalize_descending_options
+      if options['descending'].to_s == 'true' && (options['startkey'] || options['endkey'])
+        options['startkey'], options['endkey'] = options['endkey'], options['startkey']
+      end
     end
     
   end
