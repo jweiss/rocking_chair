@@ -39,6 +39,14 @@ If you have tests where you want to run against the real CouchDB,
 just deactivate RockingChair:
 
     RockingChair.disable
+
+You can also make RockingChair dump all requests:
+
+    RockingChair.enable_debug
+    
+and
+
+    RockingChair.disable_debug
     
     
 Caveats

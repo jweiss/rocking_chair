@@ -35,4 +35,12 @@ module RockingChair
     end
   end
   
+  def self.enable_debug
+    HttpAbstraction.instance_variable_set("@_rocking_chair_debug", true)
+  end
+  
+  def self.disable_debug
+    HttpAbstraction.instance_variable_set("@_rocking_chair_debug", false)
+  end
+  
 end

@@ -2,7 +2,7 @@ module RockingChair
   module CouchRestHttpAdapter
     URL_PARAMETER = /[a-zA-Z0-9\-\_\%]+/
     
-    @_rocking_chair_debug = true
+    @_rocking_chair_debug = false
     
     def get(uri, headers={})
       puts "GET: #{uri.inspect}: #{headers.inspect}" if @_rocking_chair_debug
