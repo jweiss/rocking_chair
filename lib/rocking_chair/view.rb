@@ -192,24 +192,27 @@ module RockingChair
     def sort_by_attribute(attribute)
       attribute ||= '_id'
       @keys = (options['descending'].to_s == 'true') ? 
-        keys.sort{|x,y| RockingChair::Helper.access(attribute, ruby_store[y]) <=> RockingChair::Helper.access(attribute, ruby_store[x]) } : 
-        keys.sort{|x,y| RockingChair::Helper.access(attribute, ruby_store[x]) <=> RockingChair::Helper.access(attribute, ruby_store[y]) }
+        keys.sort{|x,y| 
+          if RockingChair::Helper.access(attribute, ruby_store[y]).nil?
+            -1
+          else 
+            RockingChair::Helper.access(attribute, ruby_store[y]) <=> RockingChair::Helper.access(attribute, ruby_store[x]) 
+          end } : 
+        keys.sort{|x,y| 
+          if RockingChair::Helper.access(attribute, ruby_store[x]).nil?
+            -1 
+          else
+            RockingChair::Helper.access(attribute, ruby_store[x]) <=> RockingChair::Helper.access(attribute, ruby_store[y]) 
+          end }
     end
     
     def filter_items_without_attribute_value(attribute, attr_value)
-      if attr_value
-        @keys = keys.select do |key| 
-          document = ruby_store[key]
-          if RockingChair::Helper.access(attribute, document).is_a?(Array)
-            RockingChair::Helper.access(attribute, document).include?(attr_value)
-          else
-            RockingChair::Helper.access(attribute, document) == attr_value
-          end
-        end
-      else
-        @keys = keys.select do |key| 
-          document = ruby_store[key]
-          RockingChair::Helper.access(attribute, document).present?
+      @keys = keys.select do |key| 
+        document = ruby_store[key]
+        if RockingChair::Helper.access(attribute, document).is_a?(Array)
+          RockingChair::Helper.access(attribute, document).include?(attr_value)
+        else
+          RockingChair::Helper.access(attribute, document) == attr_value
         end
       end
     end

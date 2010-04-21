@@ -172,6 +172,27 @@ class SimplyStoredTest < Test::Unit::TestCase
           assert_equal 3, User.count
         end
         
+        should "count_by" do
+          User.create(:firstname => 'michael')
+        
+          assert_equal 1, User.count
+          assert_equal 1, User.count_by_firstname('michael')
+        end
+        
+        should "count_by with nil attributes" do
+          Project.create(:title => nil)
+        
+          assert_equal 1, Project.count
+          assert_equal 1, Project.count_by_title(nil)
+          
+          Project.create(:title => nil, :manager_id => 12)
+          
+          assert_equal 2, Project.count
+          assert_equal 2, Project.count_by_title(nil)
+          assert_equal 1, Project.count_by_manager_id(12)
+          assert_equal 1, Project.count_by_manager_id_and_title(12, nil)
+        end
+        
         context "with deleted" do
           setup do
             RockingChair::Server.reset
