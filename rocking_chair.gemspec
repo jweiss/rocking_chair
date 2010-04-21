@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rocking_chair}
-  s.version = "0.0.5"
+  s.version = "0.0.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jonathan Weiss"]
-  s.date = %q{2010-03-04}
+  s.date = %q{2010-04-21}
   s.description = %q{In-memory CouchDB for Couchrest and SimplyStored. Works for database and document API, by_attribute views, and for SimplyStored generated views}
   s.email = %q{jw@innerewut.de}
   s.extra_rdoc_files = [
@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://github.com/jweiss/rocking_chair}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.5}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{In-memory CouchDB for Couchrest and SimplyStored}
   s.test_files = [
     "test/couch_rest_test.rb",
