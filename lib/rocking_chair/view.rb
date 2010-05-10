@@ -118,7 +118,7 @@ module RockingChair
       filter_items_by_key([foreign_key_id(belongs_to)])
       filter_items_without_correct_ruby_class
       filter_deleted_items if options['without_deleted'].to_s == 'true'
-      sort_by_attribute('_id')
+      sort_by_attribute('created_at')
     end
     
     def find_by_attribute(attribute_string)

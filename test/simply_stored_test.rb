@@ -118,11 +118,22 @@ class SimplyStoredTest < Test::Unit::TestCase
           assert_equal 3, @project.users.size
           assert_equal 2, @project.users(:limit => 2).size
         end
-        
-        should "support order" do
-          3.times{|i| User.create!(:firstname => "user #{i}", :project => @project) }
-          assert_not_equal @project.users(:order => :asc).map(&:id), @project.users(:order => :desc).map(&:id)
-          assert_equal @project.users(:order => :asc).reverse, @project.users(:order => :desc)
+                
+        should "support mixing order and limit" do
+          michael = User.find(User.create!(:firstname => "michael", :project => @project).id)
+          michael.created_at = Time.local(2001)
+          michael.save!
+          
+          mickey = User.find(User.create!(:firstname => "mickey", :project => @project).id)
+          mickey.created_at = Time.local(2002)
+          mickey.save!
+          
+          mike = User.find(User.create!(:firstname => "mike", :project => @project).id)
+          mike.created_at = Time.local(2003)
+          mike.save!
+          
+          assert_equal ["michael", "mickey", "mike"], @project.users(:order => :asc).map(&:firstname)
+          assert_equal ["michael", "mickey", "mike"].reverse, @project.users(:order => :desc).map(&:firstname)
         end
       end
       
