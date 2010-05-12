@@ -1,4 +1,5 @@
-require File.dirname(__FILE__) + "/../lib/rocking_chair"
+$:.unshift(File.dirname(__FILE__) + "/../lib")
+require "rocking_chair"
 
 require 'test/unit'
 require 'shoulda'
