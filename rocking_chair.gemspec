@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rocking_chair}
-  s.version = "0.0.6"
+  s.version = "0.0.7"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jonathan Weiss"]
-  s.date = %q{2010-04-21}
+  s.date = %q{2010-05-10}
   s.description = %q{In-memory CouchDB for Couchrest and SimplyStored. Works for database and document API, by_attribute views, and for SimplyStored generated views}
   s.email = %q{jw@innerewut.de}
   s.extra_rdoc_files = [

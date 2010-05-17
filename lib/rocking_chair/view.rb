@@ -195,12 +195,16 @@ module RockingChair
         keys.sort{|x,y| 
           if RockingChair::Helper.access(attribute, ruby_store[y]).nil?
             -1
+          elsif RockingChair::Helper.access(attribute, ruby_store[x]).nil?
+            1
           else 
             RockingChair::Helper.access(attribute, ruby_store[y]) <=> RockingChair::Helper.access(attribute, ruby_store[x]) 
           end } : 
         keys.sort{|x,y| 
           if RockingChair::Helper.access(attribute, ruby_store[x]).nil?
             -1 
+          elsif RockingChair::Helper.access(attribute, ruby_store[y]).nil?
+            1
           else
             RockingChair::Helper.access(attribute, ruby_store[x]) <=> RockingChair::Helper.access(attribute, ruby_store[y]) 
           end }
