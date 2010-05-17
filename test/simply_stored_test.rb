@@ -202,6 +202,11 @@ class SimplyStoredTest < Test::Unit::TestCase
           assert_equal 2, Project.count_by_title(nil)
           assert_equal 1, Project.count_by_manager_id(12)
           assert_equal 1, Project.count_by_manager_id_and_title(12, nil)
+          
+          Project.create(:title => 'Hi There')
+          
+          assert_equal 3, Project.count
+          assert_equal 2, Project.count_by_title(nil)
         end
         
         context "with deleted" do

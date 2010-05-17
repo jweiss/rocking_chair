@@ -29,6 +29,7 @@ module RockingChair
         'reduce' => false,
         'limit' => nil,
         'key' => nil,
+        'filter_by_key' => false,
         'descending' => false,
         'include_docs' => false,
         'without_deleted' => false,
@@ -37,8 +38,13 @@ module RockingChair
         'endkey_docid' => nil,
         'startkey_docid' => nil
       }.update(options)
-      @options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted', 'endkey', 'startkey', 'endkey_docid', 'startkey_docid')
+      @options.assert_valid_keys('reduce', 'limit', 'key', 'descending', 'include_docs', 'without_deleted', 'endkey', 'startkey', 'endkey_docid', 'startkey_docid', 'filter_by_key')
       RockingChair::Helper.jsonfy_options(@options, 'key', 'startkey', 'endkey', 'startkey_docid', 'endkey_docid')
+      
+      if options.has_key?('key')
+        # still filter even if key is nil
+        @options['filter_by_key'] = true
+      end
       
       normalize_view_name
       normalize_descending_options
@@ -151,7 +157,7 @@ module RockingChair
     def filter_items_by_key(attributes)
       if options['startkey']
         filter_items_by_range(attributes)
-      elsif options['key']
+      elsif options['filter_by_key'] || options['key']
         filter_items_by_exact_key(attributes)
       end
     end
