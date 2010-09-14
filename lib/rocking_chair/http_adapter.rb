@@ -2,10 +2,15 @@ module RockingChair
   module HttpAdapter
     
     def http_adapter
+      unless @_restclient
+        @_restclient = Object.new
+        @_restclient.extend(RestClientAdapter::API)
+      end
+      
       if RockingChair.enabled?
         RockingChair::CouchRestHttpAdapter
       else
-        RestClientAdapter::API
+        @_restclient
       end
     end
   

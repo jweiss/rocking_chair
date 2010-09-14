@@ -271,6 +271,14 @@ class SimplyStoredTest < Test::Unit::TestCase
       
     end
     
+    context "when deleting" do
+      should "delete the doc" do
+        user = User.new(:firstname => 'Bart', :lastname => 'S')
+        assert user.save
+        assert user.delete
+      end
+    end
+    
     context "when deleting all design docs" do
       should "reset all design docs" do
         User.find_all_by_firstname('a')
