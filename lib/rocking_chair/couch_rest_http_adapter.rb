@@ -4,7 +4,7 @@ module RockingChair
     
     @_rocking_chair_debug = false
     
-    def get(uri, headers={})
+    def self.get(uri, headers={})
       puts "GET: #{uri.inspect}: #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url == ''
@@ -28,7 +28,7 @@ module RockingChair
       end
     end
   
-    def post(uri, payload, headers={})
+    def self.post(uri, payload, headers={})
       puts "POST: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\/?\Z/)
@@ -40,7 +40,7 @@ module RockingChair
       end
     end
   
-    def put(uri, payload, headers={})
+    def self.put(uri, payload, headers={})
       puts "PUT: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\Z/)
@@ -54,7 +54,7 @@ module RockingChair
       end
     end
   
-    def delete(uri, headers={})
+    def self.delete(uri, headers={})
       puts "DELETE: #{uri.inspect}: #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\Z/)
@@ -68,7 +68,7 @@ module RockingChair
       end
     end
   
-    def copy(uri, headers)
+    def self.copy(uri, headers)
       puts "COPY: #{uri.inspect}: #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\/(#{URL_PARAMETER})\Z/)
