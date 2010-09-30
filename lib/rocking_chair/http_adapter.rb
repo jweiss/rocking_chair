@@ -4,7 +4,7 @@ module RockingChair
     def http_adapter
       unless @_restclient
         @_restclient = Object.new
-        @_restclient.extend(RestClientAdapter::API)
+        @_restclient.extend(RestAPI)
       end
       
       if RockingChair.enabled?
@@ -15,27 +15,51 @@ module RockingChair
     end
   
     def get(uri, headers=nil)
-      JSON.parse(http_adapter.get(uri, headers))
+      result = http_adapter.get(uri)
+      if result.is_a?(Hash)
+        result
+      else
+        JSON.parse(result)
+      end
     end
   
     def post(uri, payload, headers=nil)
-      JSON.parse(http_adapter.post(uri, payload, headers))
+      result = http_adapter.post(uri, payload)
+      if result.is_a?(Hash)
+        result
+      else
+        JSON.parse(result)
+      end
     end
   
     def put(uri, payload=nil, headers=nil)
-      JSON.parse(http_adapter.put(uri, payload, headers))
+      result = http_adapter.put(uri, payload)
+      if result.is_a?(Hash)
+        result
+      else
+        JSON.parse(result)
+      end
     end
   
     def delete(uri, headers=nil)
-      JSON.parse(http_adapter.delete(uri, headers))
+      result = http_adapter.delete(uri)
+      if result.is_a?(Hash)
+        result
+      else
+        JSON.parse(result)
+      end
     end
   
     def copy(uri, destination)
-      JSON.parse(http_adapter.copy(uri, default_headers.merge('Destination' => destination)))
+      result = http_adapter.copy(uri, default_headers.merge('Destination' => destination))
+      if result.is_a?(Hash)
+        result
+      else
+        JSON.parse(result)
+      end
     end    
  
   end
 end
 
-#::RestAPI.extend(RockingChair::HttpAdapter)
 CouchRest.extend(RockingChair::HttpAdapter)
