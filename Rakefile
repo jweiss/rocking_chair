@@ -20,6 +20,8 @@ begin
     s.authors = ["Jonathan Weiss"]
     s.files = FileList["[A-Z]*.*", "{lib}/**/*"]
     s.add_dependency('simply_stored', '>= 0.1.12')
+    s.add_dependency('rest-client', '>= 1.6.1')
+    s.add_dependency('couchrest', '>= 1.0.1')
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
