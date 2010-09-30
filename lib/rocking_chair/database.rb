@@ -59,18 +59,16 @@ module RockingChair
     
     def []=(doc_id, document, options ={})
       # options are ignored for now: batch, bulk
-      json = nil
       begin
-        json = JSON.parse(document, :create_additions => false)
-        raise "is not a Hash" unless json.is_a?(Hash)
+        document = normalize_payload(document)
       rescue Exception => e
-        raise RockingChair::Error.new(500, 'InvalidJSON', "the document is not a valid JSON object: #{e}")
+        raise RockingChair::Error.new(500, 'InvalidJSON', "the document #{doc_id} is not a valid JSON or Hash object: #{e}")
       end
       
       if exists?(doc_id)
-        update(doc_id, json)
+        update(doc_id, document)
       else
-        insert(doc_id, json)
+        insert(doc_id, document)
       end
     end
     
@@ -97,19 +95,20 @@ module RockingChair
         original.delete('_rev')
       end
       
-      self.store(new_id, original.to_json)
+      self.store(new_id, original)
     end
     
     def bulk(documents)
-      documents = JSON.parse(documents, :create_additions => false)
       response = []
-      documents['docs'].each do |doc|
+      documents = normalize_payload(documents)
+      docs = documents[:docs] || documents['docs']
+      docs.each do |doc|
         begin
           if exists?(doc['_id']) && doc['_deleted'].to_s == 'true'
             self.delete(doc['_id'], doc['_rev'])
             state = {'id' => doc['_id'], 'rev' => doc['_rev']}
           else
-            state = JSON.parse(self.store(doc['_id'], doc.to_json))
+            state = JSON.parse(self.store(doc['_id'], doc))
           end
           response << {'id' => state['id'], 'rev' => state['rev']}
         rescue RockingChair::Error => e
@@ -132,6 +131,12 @@ module RockingChair
     end
     
   protected
+  
+    def normalize_payload(doc)
+      doc = JSON.parse(doc, :create_additions => false) unless doc.is_a?(Hash)
+      raise "is not a Hash" unless doc.is_a?(Hash)
+      doc
+    end
   
     def state_tuple(_id, _rev)
       {"ok" => true, "id" =>  _id, "rev" => _rev }.to_json

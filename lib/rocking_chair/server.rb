@@ -55,6 +55,7 @@ module RockingChair
     
     def self.store(db_name, doc_id, document, options)
       return respond_with_error(404) unless databases.has_key?(db_name)
+
       databases[db_name].store(doc_id, document, options)
     rescue RockingChair::Error => e
       e.raise_rest_client_error

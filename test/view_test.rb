@@ -16,7 +16,7 @@ class ViewTest < Test::Unit::TestCase
           'reduce' => "function(key, values){ return values.length }",
           "map" => "function(doc) { if(doc.ruby_class && doc.ruby_class == 'Instance') { emit(doc['created_at'], null); } }"
         }
-      }}.to_json
+      }}
       
       @db.stubs(:rev).returns('the-rev')
       
@@ -31,7 +31,7 @@ class ViewTest < Test::Unit::TestCase
           'reduce' => "function(key, values){ return values.length }",
           "map" => "function(doc) { if(doc.ruby_class && doc.ruby_class == 'Instance') { emit(doc['created_at'], null); } }"
         }
-      }}.to_json
+      }}
       
       assert_nothing_raised do
         JSON.parse(@db.view('user', 'by_firstname', {}))
@@ -57,7 +57,7 @@ class ViewTest < Test::Unit::TestCase
             'reduce' => "function(key, values){ return values.length }",
             "map" => "function(doc) {\n if(doc.ruby_class && doc.ruby_class == 'Instance') {\n emit(doc['created_at'], null);\n }\n }"
           }
-        }}.to_json
+        }}
         
         @db.stubs(:rev).returns('the-rev')
       end
@@ -77,9 +77,9 @@ class ViewTest < Test::Unit::TestCase
       context "when querying by_attr_and_attr views" do
         
         should "return all keys if no key is given" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
-          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
+          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
           assert_equal({
             "total_rows" => 3,
@@ -101,9 +101,9 @@ class ViewTest < Test::Unit::TestCase
         end
         
         should "return all docs if no key is given and we asked to include the docs" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
-          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
+          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
           assert_equal({
             "total_rows" => 3,
@@ -143,9 +143,9 @@ class ViewTest < Test::Unit::TestCase
         end
         
         should "return matching elements" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
-          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
+          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
           assert_equal({
             "total_rows" => 2,
@@ -175,9 +175,9 @@ class ViewTest < Test::Unit::TestCase
         end
         
         should "only return items with the correct klass matcher" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'Project'}.to_json
-          @db['user_2'] = {"firstname" => 'Alf', 'lastname' => 'Michaels'}.to_json
-          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'Project'}
+          @db['user_2'] = {"firstname" => 'Alf', 'lastname' => 'Michaels'}
+          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
           assert_equal({
             "total_rows" => 1,
@@ -197,9 +197,9 @@ class ViewTest < Test::Unit::TestCase
         end
         
         should "support multiple attributes" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
-          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
+          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
           assert_equal({
             "total_rows" => 1,
@@ -219,9 +219,9 @@ class ViewTest < Test::Unit::TestCase
         end
 
         should "support startkey and endkey parameters" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
-          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
+          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
           assert_equal(JSON.parse({
             "total_rows" => 2,
@@ -253,9 +253,9 @@ class ViewTest < Test::Unit::TestCase
         end
         
         should "support startkey/endkey combined with startkey_docid/endkey_docid parameters" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
-          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
+          @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
           assert_equal(JSON.parse({
             "total_rows" => 2,
@@ -280,8 +280,8 @@ class ViewTest < Test::Unit::TestCase
       
       context "belongs_to" do
         should "load parent" do
-          @db['project_1'] = {"title" => 'alpha', 'ruby_class' => 'Project'}.to_json
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'project_id' => 'project_1', 'ruby_class' => 'User'}.to_json
+          @db['project_1'] = {"title" => 'alpha', 'ruby_class' => 'Project'}
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'project_id' => 'project_1', 'ruby_class' => 'User'}
                   
           assert_equal({
             "total_rows" => 1,
@@ -304,9 +304,9 @@ class ViewTest < Test::Unit::TestCase
       
       context "all_documents" do
         should "load all documents of the matching class" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
-          @db['project_1'] = {"title" => 'Alpha', 'ruby_class' => 'Project'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
+          @db['project_1'] = {"title" => 'Alpha', 'ruby_class' => 'Project'}
           
           assert_equal({
             "total_rows" => 2,
@@ -336,8 +336,8 @@ class ViewTest < Test::Unit::TestCase
         end
         
         should "limit the results if asked to" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
           
           assert_equal({
             "total_rows" => 2,
@@ -357,8 +357,8 @@ class ViewTest < Test::Unit::TestCase
         end
         
         should "count the objects with reduce" do
-          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}.to_json
-          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}.to_json
+          @db['user_1'] = {"firstname" => 'Alf', 'lastname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
           
           assert_equal({
             "rows" => [{ "key" => nil, "value" => 2}]

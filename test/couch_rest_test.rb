@@ -236,7 +236,7 @@ class CouchRestTest < Test::Unit::TestCase
         
         should "raise 409 on a revision conflict" do
           @db.save_doc({'_id' => 'new-item', 'content' => 'here'})
-          assert_raise(HttpAbstraction::Conflict) do
+          assert_raise(RestClient::Conflict) do
             @db.save_doc({'_id' => 'new-item', 'content' => 'better', '_rev' => 'wrong-revision'})
           end
           
@@ -275,7 +275,7 @@ class CouchRestTest < Test::Unit::TestCase
         
         should "fail with conflich if the rev does not matche" do
           @db.save_doc({'a' => 'b', '_id' => 'delete_me'})
-          assert_raise(HttpAbstraction::Conflict) do
+          assert_raise(RestClient::Conflict) do
             @db.delete_doc({'a' => 'b', '_id' => 'delete_me', '_rev' => 'wrong-revision'})
           end
           assert_nothing_raised do
@@ -310,7 +310,7 @@ class CouchRestTest < Test::Unit::TestCase
         
           should "not copy with overwrite if the revision does not match" do
             @db.save_doc({'1' => '2', '_id' => 'destination'})
-            assert_raise(HttpAbstraction::Conflict) do
+            assert_raise(RestClient::Conflict) do
               @db.copy_doc({'a' => 'b', '_id' => 'original', '_rev' => '123'}, 'destination?rev=not-here')
             end
           end
@@ -337,7 +337,7 @@ class CouchRestTest < Test::Unit::TestCase
           
           should "not copy with overwrite if the revision does not match" do
             @db.save_doc({'1' => '2', '_id' => 'destination'})
-            assert_raise(HttpAbstraction::Conflict) do
+            assert_raise(RestClient::Conflict) do
               @db.copy_doc({'a' => 'b', '_id' => 'original', '_rev' => '123'}, {'1' => '2', '_id' => 'destination', '_rev' => 'missing'})
             end
           end

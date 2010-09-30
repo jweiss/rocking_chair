@@ -22,7 +22,7 @@ module RockingChair
       when 404
         raise RestClient::ResourceNotFound
       when 409
-        raise HttpAbstraction::Conflict
+        raise RestClient::Conflict
       else
         raise "Unknown error code: #{code.inspect}"
       end

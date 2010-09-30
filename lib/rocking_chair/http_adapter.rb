@@ -15,26 +15,27 @@ module RockingChair
     end
   
     def get(uri, headers=nil)
-      http_adapter.get(uri, headers)
+      JSON.parse(http_adapter.get(uri, headers))
     end
   
     def post(uri, payload, headers=nil)
-      http_adapter.post(uri, payload, headers)
+      JSON.parse(http_adapter.post(uri, payload, headers))
     end
   
-    def put(uri, payload, headers=nil)
-      http_adapter.put(uri, payload, headers)
+    def put(uri, payload=nil, headers=nil)
+      JSON.parse(http_adapter.put(uri, payload, headers))
     end
   
     def delete(uri, headers=nil)
-      http_adapter.delete(uri, headers)
+      JSON.parse(http_adapter.delete(uri, headers))
     end
   
-    def copy(uri, headers)
-      http_adapter.copy(uri, headers)
+    def copy(uri, destination)
+      JSON.parse(http_adapter.copy(uri, default_headers.merge('Destination' => destination)))
     end    
  
   end
 end
 
-HttpAbstraction.extend(RockingChair::HttpAdapter)
+#::RestAPI.extend(RockingChair::HttpAdapter)
+CouchRest.extend(RockingChair::HttpAdapter)

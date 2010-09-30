@@ -40,7 +40,7 @@ module RockingChair
       end
     end
   
-    def self.put(uri, payload, headers={})
+    def self.put(uri, payload=nil, headers={})
       puts "PUT: #{uri.inspect}: #{payload.inspect} #{headers.inspect}" if @_rocking_chair_debug
       url, parameters = RockingChair::Server.normalize_url(uri)
       if url.match(/\A(#{URL_PARAMETER})\Z/)
