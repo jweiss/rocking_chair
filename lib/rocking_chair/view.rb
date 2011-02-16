@@ -59,6 +59,8 @@ module RockingChair
         find_by_attribute(match[1])
       elsif match = view_name.match(/\Aassociation_#{design_document_name}_belongs_to_(\w+)\Z/)
         find_belongs_to(match[1])
+      elsif match = view_name.match(/\Aassociation_#{design_document_name}_has_and_belongs_to_many_(\w+)\Z/)
+        find_has_and_belongs_to_many(match[1])
       else
         raise "Unknown View implementation for view #{view_name.inspect} in design document _design/#{design_document_name}"
       end
@@ -126,6 +128,17 @@ module RockingChair
       filter_deleted_items if options['without_deleted'].to_s == 'true'
       sort_by_attribute('created_at')
     end
+
+    def find_has_and_belongs_to_many(belongs_to)
+      if foreign_keys_are_stored_on_my_class?(belongs_to)
+        filter_items_by_key_in_attribute_group(foreign_key_array_id(belongs_to))
+        filter_items_without_correct_ruby_class
+      else
+        filter_items_by_query_document_attributes(belongs_to)
+      end
+      filter_deleted_items if options['without_deleted'].to_s == 'true'
+      sort_by_attribute('created_at')
+    end
     
     def find_by_attribute(attribute_string)
       attributes = attribute_string.split("_and_")
@@ -148,7 +161,12 @@ module RockingChair
       end
       @view_name = view_name.gsub(/_withoutdeleted\Z/, '').gsub(/_without_deleted\Z/, '').gsub(/_withdeleted\Z/, '').gsub(/_with_deleted\Z/, '')
     end
-    
+
+    def foreign_keys_are_stored_on_my_class?(belongs_to)
+      reduce_function = @view_document['reduce']
+      reduce_function == "_sum"
+    end
+
     def initialize_ruby_store
       @ruby_store = database.storage.dup
       @ruby_store.each{|doc_id, json_document| ruby_store[doc_id] = JSON.parse(json_document, :create_additions => false) }
@@ -188,6 +206,22 @@ module RockingChair
       end
     end
     
+    def filter_items_by_key_in_attribute_group(attribute)
+      filter_key = (options['key'] || options['startkey']).to_s
+      @keys = keys.select do |key|
+        document = ruby_store[key]
+        document_attribute = RockingChair::Helper.access(attribute, document)
+        document_attribute && document_attribute.is_a?(Array) && document_attribute.include?(filter_key)
+      end
+    end
+
+    def filter_items_by_query_document_attributes(belongs_to)
+      filter_key = options['key'] || options['startkey']
+      filtering_document = ruby_store[filter_key.to_s]
+      reverse_foreign_key = foreign_key_array_id(design_document_name)
+      @keys = RockingChair::Helper.access(reverse_foreign_key, filtering_document)
+    end
+
     def filter_deleted_items
       @keys = keys.delete_if do |key| 
         document = ruby_store[key]
@@ -257,6 +291,10 @@ module RockingChair
         
     def foreign_key_id(name)
       name.underscore.gsub('/','__').gsub('::','__') + "_id"
+    end
+
+    def foreign_key_array_id(name)
+      name.underscore.singularize.gsub('/','__').gsub('::','__') + "_ids"
     end
     
     def key_description

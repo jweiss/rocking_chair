@@ -46,15 +46,19 @@ class ViewTest < Test::Unit::TestCase
             'map' => "function(item){emit(item)}"
           },
           'by_firstname' => {
-            'reduce' => "function(key, values){ return values.length }",
+            'reduce' => "_sum",
             "map" => "function(doc) {\n if(doc.ruby_class && doc.ruby_class == 'Instance') {\n emit(doc['created_at'], null);\n }\n }"
           },
           'by_firstname_and_lastname' => {
-            'reduce' => "function(key, values){ return values.length }",
+            'reduce' => "_sum",
             "map" => "function(doc) {\n if(doc.ruby_class && doc.ruby_class == 'Instance') {\n emit(doc['created_at'], null);\n }\n }"
           },
           'association_user_belongs_to_project' => {
-            'reduce' => "function(key, values){ return values.length }",
+            'reduce' => "_sum",
+            "map" => "function(doc) {\n if(doc.ruby_class && doc.ruby_class == 'Instance') {\n emit(doc['created_at'], null);\n }\n }"
+          },
+          'association_user_has_and_belongs_to_many_groups' => {
+            'reduce' => "_sum",
             "map" => "function(doc) {\n if(doc.ruby_class && doc.ruby_class == 'Instance') {\n emit(doc['created_at'], null);\n }\n }"
           }
         }}
@@ -366,6 +370,80 @@ class ViewTest < Test::Unit::TestCase
         end
       end
       
+      context "has and belongs to many views" do
+        setup do
+          @db['group_1'] = {"name" => 'A', 'ruby_class' => 'Group'}
+          @db['group_2'] = {"name" => 'B', 'ruby_class' => 'Group'}
+          @db['user_1'] = {"group_ids" => ['group_1', 'group_2'], 'firstname' => 'Bert', 'ruby_class' => 'User'}
+          @db['user_2'] = {"group_ids" => ['group_1'], 'firstname' => 'Alf', 'ruby_class' => 'User'}
+          @db['_design/group'] = { 'language' => 'javascript', 'views' => {
+            'all_documents' => {
+              'reduce' => nil,
+              'map' => "function(item){emit(item)}"
+            },
+            'association_group_has_and_belongs_to_many_users' => {
+              'reduce' => "function(key, values){ return values.length }",
+              "map" => "function(doc) {\n if(doc.ruby_class && doc.ruby_class == 'Instance') {\n emit(doc['created_at'], null);\n }\n }"
+            }
+          }}
+        end
+
+        should "return all item not storing keys" do
+          assert_equal(JSON.parse({
+            "total_rows" => 2,
+            "rows" => [
+              {"doc" => {
+                  "_rev" => "the-rev",
+                  "group_ids" => ["group_1","group_2"],
+                  "_id" => "user_1",
+                  "firstname" => "Bert",
+                  "ruby_class" => "User"
+                },
+                "id" => "user_1",
+                "value" => nil,
+                "key" => "group_1"
+              },{
+                "doc" => {
+                  "_rev" => "the-rev",
+                  "group_ids" => ["group_1"],
+                  "_id" => "user_2",
+                  "firstname" => "Alf",
+                  "ruby_class" => "User"
+                },
+                "id" => "user_2",
+                "value" => nil,
+                "key" => "group_1"
+              }],
+              "offset" => 0}.to_json), JSON.parse(@db.view('user', 'association_user_has_and_belongs_to_many_groups', 'key' => "group_1".to_json, 'include_docs' => 'true')))
+        end
+
+        should "return all item storing keys" do
+          assert_equal(JSON.parse({
+            "total_rows" => 2,
+            "rows" => [
+              {"doc" => {
+                  "_rev" => "the-rev",
+                  "_id" => "group_1",
+                  "name" => "A",
+                  "ruby_class" => "Group"
+                },
+                "id" => "group_1",
+                "value" => nil,
+                "key" => "user_1"
+              },{
+                "doc" => {
+                  "_rev" => "the-rev",
+                  "_id" => "group_2",
+                  "name" => "B",
+                  "ruby_class" => "Group"
+                },
+                "id" => "group_2",
+                "value" => nil,
+                "key" => "user_1"
+              }],
+              "offset" => 0}.to_json), JSON.parse(@db.view('group', 'association_group_has_and_belongs_to_many_users', 'key' => "user_1".to_json, 'include_docs' => 'true')))
+        end
+      end
     end
     
   end

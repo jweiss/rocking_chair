@@ -279,6 +279,58 @@ class SimplyStoredTest < Test::Unit::TestCase
       end
     end
     
+    context "when handling n:m relations using has_and_belongs_to_many" do
+      should "work relations from both sides" do
+        network_a = Network.create(:klass => "A")
+        network_b = Network.create(:klass => "B")
+        3.times {
+          server = Server.new
+          server.add_network(network_a)
+          server.add_network(network_b)
+        }
+        assert_equal 3, network_a.servers.size
+        network_a.servers.each do |server|
+          assert_equal 2, server.networks.size
+        end
+        assert_equal 3, network_b.servers.size
+        network_b.servers.each do |server|
+          assert_equal 2, server.networks.size
+        end
+      end
+
+      should "work relations from both sides - regardless from where the add was called" do
+        network_a = Network.create(:klass => "A")
+        network_b = Network.create(:klass => "B")
+        3.times {
+          server = Server.new
+          network_a.add_server(server)
+          network_b.add_server(server)
+        }
+        assert_equal 3, network_a.servers.size
+        network_a.servers.each do |server|
+          assert_equal 2, server.networks.size, server.network_ids.inspect
+        end
+        assert_equal 3, network_b.servers.size
+        network_b.servers.each do |server|
+          assert_equal 2, server.networks.size
+        end
+      end
+
+      should "cound correctly - regardless of the side of the relation" do
+        network_a = Network.create(:klass => "A")
+        network_b = Network.create(:klass => "B")
+        3.times {
+          server = Server.new
+          network_a.add_server(server)
+          network_b.add_server(server)
+        }
+        assert_equal 3, network_a.server_count
+        assert_equal 3, network_b.server_count
+        assert_equal 2, network_a.servers.first.network_count
+        assert_equal 2, network_b.servers.first.network_count
+      end
+    end
+
     context "when deleting all design docs" do
       should "reset all design docs" do
         User.find_all_by_firstname('a')

@@ -6,6 +6,7 @@ class User
   property :firstname
   property :lastname
   belongs_to :project
+  has_and_belongs_to_many :groups, :storing_keys => true
   
   enable_soft_delete
   
@@ -33,4 +34,27 @@ class CustomViewUser
   
   property :tags
   view :by_tags, :type => SimplyStored::Couch::Views::ArrayPropertyViewSpec, :key => :tags
+end
+
+class Group
+  include SimplyStored::Couch
+
+  property :name
+  has_and_belongs_to_many :users, :storing_keys => false
+end
+
+class Server
+  include SimplyStored::Couch
+
+  property :hostname
+
+  has_and_belongs_to_many :networks, :storing_keys => true
+end
+
+class Network
+  include SimplyStored::Couch
+
+  property :klass
+
+  has_and_belongs_to_many :servers, :storing_keys => false
 end
