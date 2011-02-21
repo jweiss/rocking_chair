@@ -329,6 +329,61 @@ class SimplyStoredTest < Test::Unit::TestCase
         assert_equal 2, network_a.servers.first.network_count
         assert_equal 2, network_b.servers.first.network_count
       end
+
+      should "support mixing order and limit" do
+        network_1 = Network.find(Network.create!(:klass => "A").id)
+        network_1.created_at = Time.local(2001)
+        network_1.save!
+
+        network_2 = Network.find(Network.create!(:klass => "B").id)
+        network_2.created_at = Time.local(2002)
+        network_2.save!
+
+        server_1 = Server.find(Server.create!(:hostname => 'www.example.com').id)
+        server_1.created_at = Time.local(2003)
+        network_1.add_server(server_1)
+        network_2.add_server(server_1)
+
+        server_2 = Server.find(Server.create!(:hostname => 'foo.com').id)
+        server_2.created_at = Time.local(2004)
+        network_1.add_server(server_2)
+        network_2.add_server(server_2)
+
+        assert_equal ['www.example.com', 'foo.com'], network_1.servers(:order => :asc).map(&:hostname)
+        assert_equal ['www.example.com', 'foo.com'].reverse, network_1.servers(:order => :desc).map(&:hostname)
+
+        assert_equal ['A', 'B'], server_2.networks(:order => :asc).map(&:klass)
+        assert_equal ['A', 'B'].reverse, server_2.networks(:order => :desc).map(&:klass)
+
+        assert_equal ['www.example.com'], network_1.servers(:order => :asc, :limit => 1).map(&:hostname)
+        assert_equal ['foo.com'], network_1.servers(:order => :desc, :limit => 1).map(&:hostname)
+
+        assert_equal ['A'], server_2.networks(:order => :asc, :limit => 1).map(&:klass)
+        assert_equal ['B'], server_2.networks(:order => :desc, :limit => 1).map(&:klass)
+      end
+      
+      should "when counting cache the result" do
+        @network = Network.create(:klass => "C")
+        @server = Server.create
+        assert_equal 0, @network.server_count
+        Server.create(:network_ids => [@network.id])
+        assert_equal 0, @network.server_count
+        assert_equal 0, @network.instance_variable_get("@server_count")
+        @network.instance_variable_set("@server_count", nil)
+        assert_equal 1, @network.server_count
+      end
+
+      should "when counting cache the result - from both directions" do
+        @network = Network.create(:klass => "C")
+        @server = Server.create
+        assert_equal 0, @server.network_count
+        @server.network_ids = [@network.id]
+        @server.save!
+        assert_equal 0, @server.network_count
+        assert_equal 0, @server.instance_variable_get("@network_count")
+        @server.instance_variable_set("@network_count", nil)
+        assert_equal 1, @server.network_count
+      end
     end
 
     context "when deleting all design docs" do

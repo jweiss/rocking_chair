@@ -219,7 +219,7 @@ module RockingChair
       filter_key = options['key'] || options['startkey']
       filtering_document = ruby_store[filter_key.to_s]
       reverse_foreign_key = foreign_key_array_id(design_document_name)
-      @keys = RockingChair::Helper.access(reverse_foreign_key, filtering_document)
+      @keys = RockingChair::Helper.access(reverse_foreign_key, filtering_document) || []
     end
 
     def filter_deleted_items
