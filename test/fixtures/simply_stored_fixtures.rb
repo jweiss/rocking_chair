@@ -29,7 +29,7 @@ class Manager
   has_one :project
 end
 
-class CustomViewUser
+class CustomFiewUser
   include SimplyStored::Couch
   
   property :tags

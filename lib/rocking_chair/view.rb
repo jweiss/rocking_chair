@@ -18,10 +18,10 @@ module RockingChair
         @design_document = JSON.parse(database.storage["_design/#{design_document_name}"], :create_additions => false)
         @view_document = design_document['views'][view_name] || RockingChair::Error.raise_404
       end
-      
+
       @database = database
       @keys = database.storage.keys
-      @design_document_name = design_document_name
+      @design_document_name = normalize_design_document_name(design_document_name)
       @view_name = view_name
       initialize_ruby_store
       
@@ -311,5 +311,9 @@ module RockingChair
       end
     end
     
+    def normalize_design_document_name(design_doc_name)
+      design_doc_name.to_s.gsub(/_view_\w+/, '')
+    end
+
   end
 end
