@@ -1,4 +1,5 @@
-require File.dirname(__FILE__) + "/test_helper"
+# encoding: utf-8
+require File.expand_path(File.dirname(__FILE__) + "/test_helper")
 
 class ExtendedCouchRestTest < Test::Unit::TestCase
   context "Extended use cases for CouchRest" do

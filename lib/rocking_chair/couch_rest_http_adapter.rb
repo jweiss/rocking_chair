@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module RockingChair
   module CouchRestHttpAdapter
     URL_PARAMETER = /[a-zA-Z0-9\-\_\%]+/

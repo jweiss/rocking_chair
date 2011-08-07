@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module RockingChair
   module Server
     BASE_URL = /(http:\/\/)?127\.0\.0\.1:5984\//

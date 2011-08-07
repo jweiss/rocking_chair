@@ -1,4 +1,10 @@
-$:.unshift(File.dirname(__FILE__) + "/../lib")
+# encoding: utf-8
+
+require 'rubygems'
+require 'bundler/setup'
+Bundler.require(:default, :test)
+
+$:.unshift(File.expand_path(File.dirname(__FILE__) + "/../lib"))
 require "rocking_chair"
 
 require 'test/unit'
@@ -8,8 +14,8 @@ require 'json/ext'
 require 'active_support/inflector'
 require 'couchrest_extended_document'
 
-require File.dirname(__FILE__) + "/fixtures/extended_couch_rest_fixtures"
-require File.dirname(__FILE__) + "/fixtures/simply_stored_fixtures"
+require File.expand_path(File.dirname(__FILE__) + "/fixtures/extended_couch_rest_fixtures")
+require File.expand_path(File.dirname(__FILE__) + "/fixtures/simply_stored_fixtures")
 
 RockingChair.enable
 

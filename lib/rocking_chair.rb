@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require "rubygems"
 require 'active_support/core_ext/kernel/reporting'
 require "active_support/core_ext/hash"
