@@ -218,7 +218,7 @@ module RockingChair
     end
 
     def filter_items_by_query_document_attributes(belongs_to)
-      filter_key = options['key'] || options['startkey']
+      filter_key = [options['key'] || options['startkey']].flatten.first
       filtering_document = ruby_store[filter_key.to_s]
       reverse_foreign_key = foreign_key_array_id(design_document_name)
       @keys = RockingChair::Helper.access(reverse_foreign_key, filtering_document) || []
