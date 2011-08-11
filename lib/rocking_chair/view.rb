@@ -210,7 +210,7 @@ module RockingChair
     end
     
     def filter_items_by_key_in_attribute_group(attribute)
-      filter_key = (options['key'] || options['startkey']).to_s
+      filter_key = [options['key'] || options['startkey']].flatten.first.to_s
       @keys = keys.select do |key|
         document = ruby_store[key]
         document_attribute = RockingChair::Helper.access(attribute, document)
