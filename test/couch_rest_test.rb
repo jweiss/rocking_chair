@@ -124,7 +124,7 @@ class CouchRestTest < Test::Unit::TestCase
               {"id" => "C", "key" => "C", "value" => {"rev" => "the-revision", '_rev' => 'the-revision', '_id' => 'C', 'a' => 'b'}},
               {"id" => "B", "key" => "B", "value" => {"rev" => "the-revision", '_rev' => 'the-revision', '_id' => 'B', 'a' => 'b'}}
             ]
-          }, @db.documents(:startkey => "C\u999", :endkey => "B", :limit => 2, :include_docs => true, :descending => true))
+          }, @db.documents(:startkey => "C\u9999", :endkey => "B", :limit => 2, :include_docs => true, :descending => true))
         end
       end
       

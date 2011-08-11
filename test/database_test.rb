@@ -281,7 +281,7 @@ class DatabaseTest < Test::Unit::TestCase
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
             {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => "B\u999", 'endkey' => "A", 'descending' => 'true'))
+        }.to_json, @db.all_documents('startkey' => "B\u9999", 'endkey' => "A", 'descending' => 'true'))
       end
       
       should "combine start, limit, and descending" do
@@ -295,7 +295,7 @@ class DatabaseTest < Test::Unit::TestCase
           "total_rows" => 4, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => "B\u999", 'endkey' => "B", 'descending' => 'true', 'limit' => '1'))
+        }.to_json, @db.all_documents('startkey' => "B\u9999", 'endkey' => "B", 'descending' => 'true', 'limit' => '1'))
       end
       
       should "end by the given key" do
