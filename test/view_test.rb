@@ -35,7 +35,7 @@ class ViewTest < Test::Unit::TestCase
       }}
       
       assert_nothing_raised do
-        JSON.parse(@db.view('user', 'by_firstname', {}))
+        parse_json(@db.view('user', 'by_firstname', {}))
       end
     end
     
@@ -102,7 +102,7 @@ class ViewTest < Test::Unit::TestCase
               "key" => nil,
               "value" => nil
               }
-            ]}, JSON.parse(@db.view('user', 'by_firstname')))
+            ]}, parse_json(@db.view('user', 'by_firstname')))
         end
         
         should "return all docs if no key is given and we asked to include the docs" do
@@ -144,7 +144,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_2' }
               }
-            ]}.to_json, @db.view('user', 'by_firstname', 'include_docs' => 'true'))
+            ]}, parse_json(@db.view('user', 'by_firstname', 'include_docs' => 'true')))
         end
         
         should "return matching elements" do
@@ -176,7 +176,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_3' }
               }
-            ]}.to_json, @db.view('user', 'by_firstname', 'key' => "Alf".to_json, 'include_docs' => 'true'))
+            ]}, parse_json(@db.view('user', 'by_firstname', 'key' => "Alf".to_json, 'include_docs' => 'true')))
         end
         
         should "only return items with the correct klass matcher" do
@@ -198,7 +198,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_3' }
               }
-            ]}.to_json, @db.view('user', 'by_firstname', 'key' => "Alf".to_json, 'include_docs' => 'true'))
+            ]}, parse_json(@db.view('user', 'by_firstname', 'key' => "Alf".to_json, 'include_docs' => 'true')))
         end
         
         should "support multiple attributes" do
@@ -220,7 +220,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_1' }
               }
-            ]}.to_json, @db.view('user', 'by_firstname_and_lastname', 'key' => ["Alf", "Bert"].to_json, 'include_docs' => 'true'))
+            ]}, parse_json(@db.view('user', 'by_firstname_and_lastname', 'key' => ["Alf", "Bert"].to_json, 'include_docs' => 'true')))
         end
 
         should "support startkey and endkey parameters" do
@@ -228,7 +228,7 @@ class ViewTest < Test::Unit::TestCase
           @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
           @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
-          assert_equal(JSON.parse({
+          assert_equal({
             "total_rows" => 2,
             "offset" => 0,
             "rows" => [{
@@ -254,7 +254,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_3' }
               }
-            ]}.to_json), JSON.parse(@db.view('user', 'by_firstname', 'startkey' => "Alf".to_json, 'endkey' => "Alf".to_json, 'include_docs' => 'true')))
+            ]}, parse_json(@db.view('user', 'by_firstname', 'startkey' => "Alf".to_json, 'endkey' => "Alf".to_json, 'include_docs' => 'true')))
         end
         
         should "support startkey/endkey combined with startkey_docid/endkey_docid parameters" do
@@ -262,7 +262,7 @@ class ViewTest < Test::Unit::TestCase
           @db['user_2'] = {"firstname" => 'Carl', 'lastname' => 'Alf', 'ruby_class' => 'User'}
           @db['user_3'] = {"firstname" => 'Alf', 'lastname' => 'Horst', 'ruby_class' => 'User'}
           
-          assert_equal(JSON.parse({
+          assert_equal({
             "total_rows" => 2,
             "offset" => 0,
             "rows" => [{
@@ -279,7 +279,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_3' }
               }
-            ]}.to_json), JSON.parse(@db.view('user', 'by_firstname', 'startkey' => "Alf".to_json, 'endkey' => "Alf".to_json, 'startkey_docid' => "user_3".to_json, "endkey_docid" => 'user_3'.to_json, 'include_docs' => 'true', 'limit' => '1')))
+            ]}, parse_json(@db.view('user', 'by_firstname', 'startkey' => "Alf".to_json, 'endkey' => "Alf".to_json, 'startkey_docid' => "user_3".to_json, "endkey_docid" => 'user_3'.to_json, 'include_docs' => 'true', 'limit' => '1')))
         end
       end
       
@@ -303,7 +303,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_1' }
               }
-            ]}.to_json, @db.view('user', 'association_user_belongs_to_project', 'key' => "project_1".to_json, 'include_docs' => 'true'))
+            ]}, parse_json(@db.view('user', 'association_user_belongs_to_project', 'key' => "project_1".to_json, 'include_docs' => 'true')))
         end
       end
       
@@ -337,7 +337,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_2' }
               }
-            ]}.to_json, @db.view('user', 'all_documents', 'include_docs' => 'true'))
+            ]}, parse_json(@db.view('user', 'all_documents', 'include_docs' => 'true')))
         end
         
         should "limit the results if asked to" do
@@ -358,7 +358,7 @@ class ViewTest < Test::Unit::TestCase
                 '_rev' => 'the-rev',
                 '_id' => 'user_1' }
               }
-            ]}.to_json, @db.view('user', 'all_documents', 'include_docs' => 'true', 'limit' => '1'))
+            ]}, parse_json(@db.view('user', 'all_documents', 'include_docs' => 'true', 'limit' => '1')))
         end
         
         should "count the objects with reduce" do
@@ -367,7 +367,7 @@ class ViewTest < Test::Unit::TestCase
           
           assert_equal({
             "rows" => [{ "key" => nil, "value" => 2}]
-          }.to_json, @db.view('user', 'all_documents', 'include_docs' => 'false', 'reduce' => 'true'))
+          }, parse_json(@db.view('user', 'all_documents', 'include_docs' => 'false', 'reduce' => 'true')))
         end
       end
       
@@ -390,7 +390,7 @@ class ViewTest < Test::Unit::TestCase
         end
 
         should "return all item not storing keys" do
-          assert_equal(JSON.parse({
+          assert_equal(parse_json({
             "total_rows" => 2,
             "rows" => [
               {"doc" => {
@@ -415,11 +415,11 @@ class ViewTest < Test::Unit::TestCase
                 "value" => nil,
                 "key" => "group_1"
               }],
-              "offset" => 0}.to_json), JSON.parse(@db.view('user', 'association_user_has_and_belongs_to_many_groups', 'key' => "group_1".to_json, 'include_docs' => 'true')))
+              "offset" => 0}.to_json), parse_json(@db.view('user', 'association_user_has_and_belongs_to_many_groups', 'key' => "group_1".to_json, 'include_docs' => 'true')))
         end
 
         should "return all item storing keys" do
-          assert_equal(JSON.parse({
+          assert_equal(parse_json({
             "total_rows" => 2,
             "rows" => [
               {"doc" => {
@@ -442,7 +442,7 @@ class ViewTest < Test::Unit::TestCase
                 "value" => nil,
                 "key" => "user_1"
               }],
-              "offset" => 0}.to_json), JSON.parse(@db.view('group', 'association_group_has_and_belongs_to_many_users', 'key' => "user_1".to_json, 'include_docs' => 'true')))
+              "offset" => 0}.to_json), parse_json(@db.view('group', 'association_group_has_and_belongs_to_many_users', 'key' => "user_1".to_json, 'include_docs' => 'true')))
         end
       end
     end

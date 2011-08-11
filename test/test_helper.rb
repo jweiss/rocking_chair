@@ -44,3 +44,7 @@ def with_debug(&blk)
   blk.call
   HttpAbstraction.instance_variable_set("@_rocking_chair_debug", false)
 end
+
+def parse_json(string)
+  JSON.parse(string, :create_additions => false)
+end

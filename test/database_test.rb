@@ -26,13 +26,13 @@ class DatabaseTest < Test::Unit::TestCase
       should "store an element by id" do
         @db.stubs(:rev).returns('rev')
         @db['abc'] = {:a => :b}.to_json
-        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'abc'}, JSON.parse(@db['abc']))
+        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'abc'}, parse_json(@db['abc']))
       end
       
       should "assing an ID is none given" do
         @db.stubs(:rev).returns('rev')
         RockingChair::Database.expects(:uuid).returns('uuid')
-        assert_equal( {"rev" => "rev", "id" => "uuid", "ok" => true}, JSON.parse(@db.store(nil, {'a' => 'b'}.to_json)))
+        assert_equal( {"rev" => "rev", "id" => "uuid", "ok" => true}, parse_json(@db.store(nil, {'a' => 'b'}.to_json)))
       end
       
       should "make sure the content is valid JSON" do
@@ -47,18 +47,18 @@ class DatabaseTest < Test::Unit::TestCase
       end
       
       should "set the id if none given" do
-        _id = JSON.parse(@db.store(nil, {:a => :b}.to_json))['_id']
-        assert_not_nil JSON.parse(@db[_id])['_id']
+        _id = parse_json(@db.store(nil, {:a => :b}.to_json))['_id']
+        assert_not_nil parse_json(@db[_id])['_id']
       end
       
       should "populate the id" do
         @db['abc'] = {:a => :b}.to_json
-        assert_equal 'abc', JSON.parse(@db['abc'])['_id']
+        assert_equal 'abc', parse_json(@db['abc'])['_id']
       end
       
       should "populate the revision" do
         @db['abc'] = {:a => :b}.to_json
-        assert_not_nil JSON.parse(@db['abc'])['_rev']
+        assert_not_nil parse_json(@db['abc'])['_rev']
       end
       
       should "get the document count" do
@@ -73,9 +73,9 @@ class DatabaseTest < Test::Unit::TestCase
       
       context "when updating" do
         should "update the content" do
-          state = JSON.parse( @db.store('abc', {:a => :b}.to_json ))
+          state = parse_json( @db.store('abc', {:a => :b}.to_json ))
           @db['abc'] = {:a => :c, :_rev => state['rev']}.to_json
-          assert_equal 'c', JSON.parse(@db['abc'])['a']
+          assert_equal 'c', parse_json(@db['abc'])['a']
         end
         
         should "raise an error if the revs aren't matching" do
@@ -83,14 +83,14 @@ class DatabaseTest < Test::Unit::TestCase
           assert_error_code(409) do
             @db['abc'] = {:a => :c, :_rev => 'REV'}.to_json
           end
-          assert_equal 'b', JSON.parse(@db['abc'])['a']
+          assert_equal 'b', parse_json(@db['abc'])['a']
         end
       end
     end
     
     context "when deleting" do
       setup do
-        @state = JSON.parse(@db.store('abc',{:a => :b}.to_json))
+        @state = parse_json(@db.store('abc',{:a => :b}.to_json))
       end
       
       should "delete only if the revision matches" do
@@ -108,14 +108,14 @@ class DatabaseTest < Test::Unit::TestCase
     
     context "when copying" do
       setup do
-        @state = JSON.parse(@db.store('abc',{:a => :b}.to_json))
+        @state = parse_json(@db.store('abc',{:a => :b}.to_json))
       end
       
       should "copy" do
         @db.expects(:rev).returns('355068078')
-        @state = JSON.parse(@db.copy('abc', 'def'))
+        @state = parse_json(@db.copy('abc', 'def'))
         assert_equal({"ok" => true, "id" => "def", "rev" => "355068078"}, @state)
-        assert_equal({'a' => 'b', '_id' => 'def', '_rev' => "355068078"}, JSON.parse(@db['def']))
+        assert_equal({'a' => 'b', '_id' => 'def', '_rev' => "355068078"}, parse_json(@db['def']))
       end
       
       should "raise 404 if the original if not found" do
@@ -132,7 +132,7 @@ class DatabaseTest < Test::Unit::TestCase
       end
       
       should "raise 409 if the rev does not match" do
-        @state = JSON.parse(@db.store('def',{'1' => '2'}.to_json))
+        @state = parse_json(@db.store('def',{'1' => '2'}.to_json))
         
         @db.expects(:rev).returns('355068078')
         assert_error_code 409 do
@@ -141,7 +141,7 @@ class DatabaseTest < Test::Unit::TestCase
         assert_nothing_raised do
           @db.copy('abc', 'def', @state['rev'])
         end
-        assert_equal({'a' => 'b', '_id' => 'def', '_rev' => "355068078"}, JSON.parse(@db['def']))
+        assert_equal({'a' => 'b', '_id' => 'def', '_rev' => "355068078"}, parse_json(@db['def']))
       end
     end
     
@@ -150,13 +150,13 @@ class DatabaseTest < Test::Unit::TestCase
         @db.stubs(:rev).returns('rev')
         @db['a'] = {:a => :b}.to_json
         @db['b'] = {1 => 2}.to_json
-        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a'}, JSON.parse(@db['a']))
+        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a'}, parse_json(@db['a']))
       end
       
       should "return a matching document by revision" do
         @db.stubs(:rev).returns('rev')
         @db['a'] = {:a => :b}.to_json
-        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a'}, JSON.parse(@db.load('a', 'rev' => 'rev')))
+        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a'}, parse_json(@db.load('a', 'rev' => 'rev')))
       end
       
       should "raise a 404 if there is no matching document" do
@@ -176,7 +176,7 @@ class DatabaseTest < Test::Unit::TestCase
       should "load the revision history" do
         @db.stubs(:rev).returns('rev')
         @db['a'] = {:a => :b}.to_json
-        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a', '_revisions' => {'start' => 1, 'ids' => ['rev']}}, JSON.parse(@db.load('a', 'revs' => 'true')))
+        assert_equal({'a' => 'b', '_rev' => 'rev', '_id' => 'a', '_revisions' => {'start' => 1, 'ids' => ['rev']}}, parse_json(@db.load('a', 'revs' => 'true')))
       end
     end
     
@@ -339,7 +339,7 @@ class DatabaseTest < Test::Unit::TestCase
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev", '_rev' => 'rev', 'data' => 'Z', '_id' => 'B'}},
             {"id" => "C", "key" => "C", "value" => {"rev" => "rev", '_rev' => 'rev', 'data' => 'Z', '_id' => 'C'}}
           ]
-        }.to_json, @db.all_documents('startkey' => 'B', 'endkey' => 'C', 'include_docs' => 'true'))
+        }, parse_json(@db.all_documents('startkey' => 'B', 'endkey' => 'C', 'include_docs' => 'true')))
       end
       
     end
@@ -370,7 +370,7 @@ class DatabaseTest < Test::Unit::TestCase
           '_id' => 'A',
           '_rev' => 'the-revision',
           'data' => 1
-        }, JSON.parse(@db['A']))
+        }, parse_json(@db['A']))
       end
       
       should "handle conflics gracefully" do
@@ -382,7 +382,7 @@ class DatabaseTest < Test::Unit::TestCase
           assert_equal([
             {'id' => 'A', "rev" => 'the-revision'},
             {'id' => 'B', "error" => 'conflict', 'reason' => 'Document update conflict.'}
-          ].to_json, @db.bulk(docs))
+          ], parse_json(@db.bulk(docs)))
         end
       end
       
@@ -395,7 +395,7 @@ class DatabaseTest < Test::Unit::TestCase
           assert_equal([
             {'id' => 'A', "rev" => 'the-revision'},
             {'id' => 'B', "rev" => 'the-revision'}
-          ].to_json, @db.bulk(docs))
+          ], parse_json(@db.bulk(docs)))
         end
       end
     end
@@ -406,7 +406,7 @@ class DatabaseTest < Test::Unit::TestCase
           @db.stubs(:rev).returns('rev')
           @db['_design/user'] = {'language' => 'javascript', 'views' => {}}.to_json
         
-          assert_equal({'language' => 'javascript', 'views' => {}, '_rev' => 'rev', '_id' => '_design/user'}, JSON.parse(@db['_design/user']))
+          assert_equal({'language' => 'javascript', 'views' => {}, '_rev' => 'rev', '_id' => '_design/user'}, parse_json(@db['_design/user']))
         end
       
         should "not allow to store invalid design documents" do
@@ -431,7 +431,7 @@ class DatabaseTest < Test::Unit::TestCase
             }},
             '_id' => '_design/user',
             '_rev' => 'rev'
-          }, JSON.parse(@db['_design/user']))
+          }, parse_json(@db['_design/user']))
         end
       
         should "raise a 404 if there is no such design document" do
