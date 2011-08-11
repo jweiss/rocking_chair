@@ -175,6 +175,7 @@ module RockingChair
     end
     
     def filter_items_by_key(attributes)
+      attributes = [attributes].flatten
       if options['startkey']
         filter_items_by_range(attributes)
       elsif options['filter_by_key'] || options['key']
