@@ -1,8 +1,8 @@
 source :rubygems
 
 gem 'uuidtools'
-gem 'simply_stored', '0.6.8', :require => 'simply_stored/couch'
-gem 'couch_potato', '0.5.7'
+gem 'simply_stored', '0.7.0rc2', :require => 'simply_stored/couch'
+gem 'couch_potato', '0.5.7.3'
 gem 'jeweler'
 
 group :test do
