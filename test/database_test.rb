@@ -238,7 +238,7 @@ class DatabaseTest < Test::Unit::TestCase
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
             {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => 'B'))
+        }.to_json, @db.all_documents('startkey' => 'B'.to_json ))
       end
       
       should "start by the given key and ignore quotes" do
@@ -266,7 +266,7 @@ class DatabaseTest < Test::Unit::TestCase
           "total_rows" => 4, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => 'B', 'limit' => '1'))
+        }.to_json, @db.all_documents('startkey' => 'B'.to_json, 'limit' => '1'))
       end
       
       should "combine start and descending" do
@@ -281,7 +281,7 @@ class DatabaseTest < Test::Unit::TestCase
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
             {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => "B\u9999", 'endkey' => "A", 'descending' => 'true'))
+        }.to_json, @db.all_documents('startkey' => "B\u9999".to_json, 'endkey' => "A".to_json, 'descending' => 'true'))
       end
       
       should "combine start, limit, and descending" do
@@ -295,7 +295,7 @@ class DatabaseTest < Test::Unit::TestCase
           "total_rows" => 4, "offset" => 0, "rows" => [
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => "B\u9999", 'endkey' => "B", 'descending' => 'true', 'limit' => '1'))
+        }.to_json, @db.all_documents('startkey' => "B\u9999".to_json, 'endkey' => "B".to_json, 'descending' => 'true', 'limit' => '1'))
       end
       
       should "end by the given key" do
@@ -309,7 +309,7 @@ class DatabaseTest < Test::Unit::TestCase
             {"id" => "A", "key" => "A", "value" => {"rev" => "rev"}},
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('endkey' => 'B', 'startkey' => 'A'))
+        }.to_json, @db.all_documents('endkey' => 'B'.to_json, 'startkey' => 'A'.to_json))
       end
       
       should "combine start and end key" do
@@ -324,7 +324,7 @@ class DatabaseTest < Test::Unit::TestCase
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev"}},
             {"id" => "C", "key" => "C", "value" => {"rev" => "rev"}}
           ]
-        }.to_json, @db.all_documents('startkey' => 'B', 'endkey' => 'C'))
+        }.to_json, @db.all_documents('startkey' => 'B'.to_json, 'endkey' => 'C'.to_json))
       end
       
       should "combine start, end key, and include_docs" do
@@ -339,7 +339,7 @@ class DatabaseTest < Test::Unit::TestCase
             {"id" => "B", "key" => "B", "value" => {"rev" => "rev", '_rev' => 'rev', 'data' => 'Z', '_id' => 'B'}},
             {"id" => "C", "key" => "C", "value" => {"rev" => "rev", '_rev' => 'rev', 'data' => 'Z', '_id' => 'C'}}
           ]
-        }, parse_json(@db.all_documents('startkey' => 'B', 'endkey' => 'C', 'include_docs' => 'true')))
+        }, parse_json(@db.all_documents('startkey' => 'B'.to_json, 'endkey' => 'C'.to_json, 'include_docs' => 'true')))
       end
       
     end

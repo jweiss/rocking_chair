@@ -195,10 +195,11 @@ class SimplyStoredTest < Test::Unit::TestCase
           end
         
           should "count_by with nil attributes" do
-            Project.create(:title => nil)
+            p = Project.create(:title => nil)
         
             assert_equal 1, Project.count
             assert_equal 1, Project.count_by_title(nil)
+            assert_equal p, Project.find_by_title(nil)
           
             Project.create(:title => nil, :manager_id => 12)
           

@@ -69,7 +69,7 @@ class ViewTest < Test::Unit::TestCase
       
       should "respond to defined views" do
         assert_nothing_raised do
-          @db.view('user', 'by_firstname', 'key' => 'abc')
+          @db.view('user', 'by_firstname', 'key' => 'abc'.to_json)
         end
       end
       
