@@ -58,7 +58,7 @@ This will be improved by storing not only the JSON tree but also the Ruby repres
 License
 =============
 
-RockingChair is licensed under the OpenBSD / two-clause BSD license, modeled after the ISC license. See LICENSE.txt
+RockingChair is licensed under the Apache 2.0 license. See LICENSE.txt
 
 About
 =============
