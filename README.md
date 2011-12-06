@@ -1,3 +1,6 @@
+Development has stopped as I don't use RockingChair anymore. Please expect no further development.
+
+
 An in-memory CouchDB implementation in Ruby for [couchrest](http://github.com/jchris/couchrest) and [SimplyStored](http://github.com/peritor/simply_stored). 
 Works for the database and document API, by_attribute views, and for SimplyStored generated views. 
 This way your tests will no longer depend on CouchDB and can run against an in-memory database.
