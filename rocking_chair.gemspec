@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "rocking_chair"
-  s.version = "0.4.10"
+  s.version = "0.5.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jonathan Weiss"]
-  s.date = "2011-10-13"
+  s.date = "2012-05-29"
   s.description = "In-memory CouchDB for Couchrest and SimplyStored. Works for database and document API, by_attribute views, and for SimplyStored generated views"
   s.email = "jw@innerewut.de"
   s.extra_rdoc_files = [
@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/jweiss/rocking_chair"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.24"
   s.summary = "In-memory CouchDB for Couchrest and SimplyStored"
 
   if s.respond_to? :specification_version then
@@ -39,7 +39,7 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<uuidtools>, [">= 0"])
-      s.add_runtime_dependency(%q<simply_stored>, ["= 0.7.0rc7"])
+      s.add_runtime_dependency(%q<simply_stored>, ["= 0.8.0"])
       s.add_runtime_dependency(%q<couch_potato>, ["= 0.6.0.1"])
       s.add_runtime_dependency(%q<jeweler>, [">= 0"])
       s.add_runtime_dependency(%q<simply_stored>, [">= 0.1.12"])
@@ -47,7 +47,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<couchrest>, [">= 1.0.1"])
     else
       s.add_dependency(%q<uuidtools>, [">= 0"])
-      s.add_dependency(%q<simply_stored>, ["= 0.7.0rc7"])
+      s.add_dependency(%q<simply_stored>, ["= 0.8.0"])
       s.add_dependency(%q<couch_potato>, ["= 0.6.0.1"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<simply_stored>, [">= 0.1.12"])
@@ -56,7 +56,7 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<uuidtools>, [">= 0"])
-    s.add_dependency(%q<simply_stored>, ["= 0.7.0rc7"])
+    s.add_dependency(%q<simply_stored>, ["= 0.8.0"])
     s.add_dependency(%q<couch_potato>, ["= 0.6.0.1"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<simply_stored>, [">= 0.1.12"])

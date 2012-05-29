@@ -135,6 +135,7 @@ module RockingChair
   protected
   
     def normalize_payload(doc)
+      doc = doc.to_json unless doc.is_a?(String)
       doc = JSON.parse(doc, :create_additions => false) unless doc.is_a?(Hash)
       raise "is not a Hash" unless doc.is_a?(Hash)
       doc

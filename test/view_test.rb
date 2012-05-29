@@ -392,6 +392,7 @@ class ViewTest < Test::Unit::TestCase
         should "return all item not storing keys" do
           assert_equal(parse_json({
             "total_rows" => 2,
+            "offset" => 0,
             "rows" => [
               {"doc" => {
                   "_rev" => "the-rev",
@@ -414,8 +415,8 @@ class ViewTest < Test::Unit::TestCase
                 "id" => "user_2",
                 "value" => nil,
                 "key" => "group_1"
-              }],
-              "offset" => 0}.to_json), parse_json(@db.view('user', 'association_user_has_and_belongs_to_many_groups', 'key' => "group_1".to_json, 'include_docs' => 'true')))
+              }]
+              }.to_json), parse_json(@db.view('user', 'association_user_has_and_belongs_to_many_groups', 'key' => "group_1".to_json, 'include_docs' => 'true')))
         end
 
         should "return all item storing keys" do
